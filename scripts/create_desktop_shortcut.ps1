@@ -9,6 +9,7 @@ $ErrorActionPreference = "Stop"
 if (-not $ProjectRoot) {
     $ProjectRoot = Split-Path -Parent $PSScriptRoot
 }
+$ProjectRoot = $ProjectRoot.Trim().Trim('"')
 $ProjectRoot = (Resolve-Path -LiteralPath $ProjectRoot).Path
 
 if (-not $DesktopPath) {
