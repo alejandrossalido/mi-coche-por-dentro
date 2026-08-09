@@ -13,7 +13,9 @@ def test_every_vehicle_starts_with_the_complete_standard_pid_catalog():
 
     assert {row[0] for row in STANDARD_PIDS}.issubset(names)
     assert len(names) >= 90
-    assert all(row["status"] == "not_tested" for row in rows)
+    assert all(row["status"] in {"not_tested", "mapping_required"} for row in rows)
+    assert any(row["pid_name"] == "OEM_DPF_DIFFERENTIAL_PRESSURE" for row in rows)
+    assert all("importance" in row for row in rows)
 
 
 def test_bkp_catalog_contains_every_documented_kwp_candidate():

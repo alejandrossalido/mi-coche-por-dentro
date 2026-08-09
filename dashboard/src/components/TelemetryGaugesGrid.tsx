@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Car, Eye, EyeOff, Factory, Fuel, Layers3, LayoutDashboard, Thermometer, Wind, Zap } from 'lucide-react';
 import { Gauge } from './Gauge';
-import { telemetryLabel } from '@/lib/telemetryLabels';
+import { localizedMetricLabel } from '@/lib/telemetryLabels';
+import { useI18n } from '@/lib/i18n';
 
 interface TelemetryValues {
   [key: string]: number | undefined;
@@ -12,6 +13,7 @@ interface PIDCapability {
   label?: string;
   category?: string;
   unit?: string;
+  importance?: number;
   status?: string;
   supported_reported?: boolean;
   supported_verified?: boolean;
@@ -22,6 +24,7 @@ interface TelemetryGaugesGridProps {
   capabilities?: PIDCapability[];
   powertrainType?: 'gasoline' | 'diesel' | 'hybrid' | 'phev' | 'bev';
   engineCode?: string;
+  isConnected?: boolean;
   tripMetrics?: {
     available?: boolean;
     average_l_per_100km?: number;
@@ -35,11 +38,16 @@ type Category = 'motor' | 'temp' | 'intake' | 'fuel' | 'dpf' | 'elec';
 type VisibilityMode = 'data' | 'all' | 'missing' | 'diagnostic';
 
 const categoryForCapability = (item: PIDCapability): Category => {
-  const text = `${item.pid_name} ${(item as any).category || ''}`.toLowerCase();
+  const text = `${item.pid_name} ${(item as any).category || ''}`
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  // Exhaust temperatures and catalyst sensors belong to after-treatment.
+  // Check them before the generic temperature rule so Escape/DPF never empties.
+  if (text.includes('dpf') || text.includes('gpf') || text.includes('escape') || text.includes('exhaust') || text.includes('scr') || text.includes('catal') || text.includes('nox') || text.includes('adblue')) return 'dpf';
   if (text.includes('temperatur') || text.includes('refriger')) return 'temp';
   if (text.includes('admis') || text.includes('aire') || text.includes('turbo') || text.includes('egr')) return 'intake';
-  if (text.includes('dpf') || text.includes('escape') || text.includes('scr') || text.includes('catal')) return 'dpf';
-  if (text.includes('eléctr') || text.includes('electr') || text.includes('voltage') || text.includes('bater') || text.includes('altern')) return 'elec';
+  if (text.includes('electr') || text.includes('voltage') || text.includes('bater') || text.includes('altern')) return 'elec';
   if (text.includes('combust') || text.includes('mezcla') || text.includes('inyec') || text.includes('fuel') || text.includes('o2_')) return 'fuel';
   return 'motor';
 };
@@ -72,10 +80,15 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
   capabilities = [],
   powertrainType,
   engineCode,
+  isConnected = false,
   tripMetrics
 }) => {
+  const { t } = useI18n();
   const [category, setCategory] = useState<Category>('motor');
-  const [visibility, setVisibility] = useState<VisibilityMode>('data');
+  const [visibility, setVisibility] = useState<VisibilityMode>('all');
+  useEffect(() => {
+    setVisibility(isConnected ? 'data' : 'all');
+  }, [isConnected]);
   const capabilityMap = useMemo(
     () => new Map(capabilities.map((item) => [item.pid_name, item])),
     [capabilities]
@@ -178,6 +191,13 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
         if (visibility === 'data') return hasData;
         if (visibility === 'missing') return !hasData;
         return true;
+      }).sort((left, right) => {
+        const importance = Number(right.importance || 0) - Number(left.importance || 0);
+        if (importance) return importance;
+        const rightHasData = typeof values[right.pid_name] === 'number' ? 1 : 0;
+        const leftHasData = typeof values[left.pid_name] === 'number' ? 1 : 0;
+        if (rightHasData !== leftHasData) return rightHasData - leftHasData;
+        return localizedMetricLabel(left.pid_name, left.label).localeCompare(localizedMetricLabel(right.pid_name, right.label));
       });
   const categoryColors: Record<Category, string> = {
     motor: '#ff5a1f', temp: '#ffca28', intake: '#00dcff', fuel: '#ff2e9f', dpf: '#ff8a35', elec: '#c7ff35'
@@ -196,14 +216,14 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
     <section aria-label="Instrumentación de telemetría">
       <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
         {([
-          { id: 'data', label: 'Solo con datos', icon: Eye },
           { id: 'all', label: 'Todas las métricas', icon: Layers3 },
+          { id: 'data', label: 'Solo con datos', icon: Eye },
           { id: 'missing', label: 'Sin datos visibles', icon: EyeOff },
           { id: 'diagnostic', label: 'Vista de diagnóstico', icon: LayoutDashboard }
         ] as Array<{ id: VisibilityMode; label: string; icon: typeof Eye }>).map((item) => {
           const Icon = item.icon;
           return <button key={item.id} type="button" className={`sensor-tab${visibility === item.id ? ' active' : ''}`} onClick={() => setVisibility(item.id)}>
-            <Icon size={14} /> {item.label}
+            <Icon size={14} /> {t(item.label)}
           </button>;
         })}
       </div>
@@ -304,19 +324,20 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
           const range = gaugeRange(item.pid_name, item.unit || '');
           return <Gauge
             key={item.pid_name}
-            label={item.label || telemetryLabel(item.pid_name)}
+            label={localizedMetricLabel(item.pid_name, item.label)}
             value={value}
             unit={(item.unit || '—').toUpperCase()}
             min={range.min}
             max={range.max}
             color={categoryColors[category]}
+            variant={Number(item.importance || 0) >= 95 ? 'hero' : undefined}
             statusText={statusFor(value, item.pid_name)}
           />;
         })}
         {visibility !== 'diagnostic' && dynamicMetrics.length === 0 && (
           <div className="lcd-card">
-            <span>{visibility === 'data' ? 'Métricas con datos' : visibility === 'missing' ? 'Métricas sin datos visibles' : 'Métricas catalogadas'}</span>
-            <strong>No hay métricas en esta categoría para el filtro seleccionado</strong>
+            <span>{t(visibility === 'data' ? 'Métricas con datos' : visibility === 'missing' ? 'Métricas sin datos visibles' : 'Métricas catalogadas')}</span>
+            <strong>{t('No hay métricas en esta categoría para el filtro seleccionado')}</strong>
           </div>
         )}
       </div>

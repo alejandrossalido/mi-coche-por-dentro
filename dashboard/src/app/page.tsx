@@ -503,7 +503,15 @@ export default function DashboardPage() {
     combined.forEach((item) => {
       if (!item?.pid_name) return;
       const previous = byPid.get(item.pid_name);
-      if (!previous || item.supported_verified || !previous.supported_verified) byPid.set(item.pid_name, item);
+      if (!previous) {
+        byPid.set(item.pid_name, item);
+      } else if (item.supported_verified || !previous.supported_verified) {
+        byPid.set(item.pid_name, {
+          ...previous,
+          ...item,
+          importance: Math.max(Number(previous.importance || 0), Number(item.importance || 0))
+        });
+      }
     });
     return Array.from(byPid.values());
   }, [metricCatalogCapabilities, manufacturerCapabilities, preflight]);
@@ -731,6 +739,7 @@ export default function DashboardPage() {
             <TelemetryGaugesGrid
               values={telemetryValues}
               capabilities={gaugeCapabilities}
+              isConnected={Boolean(adapterStatus?.is_connected)}
               powertrainType={currentVehicle?.powertrain_type}
               engineCode={currentVehicle?.engine_code}
               tripMetrics={captureMetrics?.trip_metrics || analysis?.trip_metrics}

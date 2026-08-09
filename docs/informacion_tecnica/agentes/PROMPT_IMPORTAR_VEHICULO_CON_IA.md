@@ -204,6 +204,8 @@ INTERFAZ, INFORME E IA
 - Mantén dos niveles distintos: el cuadro de instrumentos muestra mediciones verificadas o una identificación claramente explicada; el inventario técnico muestra TODAS las métricas catalogadas, incluidas pendientes, condicionales, no disponibles, no aplicables e inaccesibles.
 - Registra cada familia nueva mediante un proveedor del catálogo general (`collector/metric_catalog.py`) para que ninguna candidata dependa de que el agente recuerde crear una tarjeta manual.
 - Cada métrica catalogada debe generar automáticamente su reloj/tarjeta, incluso sin valor. Conserva los filtros `Solo con datos`, `Todas las métricas`, `Sin datos visibles` y `Vista de diagnóstico`; no vuelvas a una lista fija que omita candidatos.
+- Asigna a cada candidata una `importance` numérica de 0 a 100. Ordena por relevancia diagnóstica general dentro de su sección; no confundas importancia con compatibilidad ni con disponibilidad de una lectura.
+- Proporciona nombres comprensibles en los cuatro idiomas de la aplicación (`es`, `en`, `it`, `de`) o un identificador técnico estable que el localizador pueda traducir. Comprueba expresamente que ninguna descripción inglesa del decodificador aparezca en la interfaz española, italiana o alemana.
 - Diferencia disponible, sin lectura reciente, condicional, pendiente de decodificar, no ofrecida, no aplicable y error de comunicación.
 - Mantén todas las traducciones de español, inglés, italiano y alemán.
 - El informe debe ser comprensible para no mecánicos y separar hechos, cálculos, hipótesis, calidad y limitaciones.
