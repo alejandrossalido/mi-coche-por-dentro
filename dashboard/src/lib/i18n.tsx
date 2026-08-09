@@ -16,6 +16,12 @@ type Translation = { en: string; it: string; de: string };
 // Spanish is the canonical source language. Keeping the source sentence as the
 // key also lets us localize safe messages returned by the local backend.
 export const UI_TRANSLATIONS: Record<string, Translation> = {
+  'Velocidad del árbol de levas': { en: 'Camshaft speed', it: 'Regime albero a camme', de: 'Nockenwellendrehzahl' },
+  'Refrigerante a la salida del radiador': { en: 'Coolant at radiator outlet', it: 'Refrigerante all’uscita del radiatore', de: 'Kühlmittel am Kühlerausgang' },
+  'Mando del ventilador del radiador': { en: 'Radiator fan command', it: 'Comando ventola radiatore', de: 'Kühlerlüfter-Ansteuerung' },
+  'Carga del alternador': { en: 'Alternator load', it: 'Carico alternatore', de: 'Generatorlast' },
+  'Par calculado del motor': { en: 'Calculated engine torque', it: 'Coppia motore calcolata', de: 'Berechnetes Motordrehmoment' },
+  'Par solicitado por el conductor': { en: 'Driver requested torque', it: 'Coppia richiesta dal conducente', de: 'Fahrerwunschmoment' },
   'Selecciona tu idioma': { en: 'Select your language', it: 'Seleziona la lingua', de: 'Sprache auswählen' },
   'Puedes cambiarlo en cualquier momento': { en: 'You can change it at any time', it: 'Puoi cambiarla in qualsiasi momento', de: 'Du kannst sie jederzeit ändern' },
   'Idioma': { en: 'Language', it: 'Lingua', de: 'Sprache' },

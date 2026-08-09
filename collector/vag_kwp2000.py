@@ -89,6 +89,12 @@ KWP_SIGNALS: tuple[KwpSignalDefinition, ...] = (
     KwpSignalDefinition("VAG_FUEL_RATE", "Consumo de combustible", "L/h", 15, 2, (0x23,), 1.0, 0, 80),
     KwpSignalDefinition("VAG_ENGINE_TORQUE", "Par calculado del motor", "Nm", 15, 1, (0x5E,), 1.0, -100, 600),
     KwpSignalDefinition("VAG_DRIVER_TORQUE_REQUEST", "Par solicitado por el conductor", "Nm", 15, 3, (0x5E,), 1.0, -100, 600),
+    # Estos cuatro campos se han contrastado además contra respuestas crudas de
+    # la PPD1.5 03G 906 018 FG del Passat B6 BKP. No son estimaciones OBD.
+    KwpSignalDefinition("VAG_ALTERNATOR_LOAD", "Carga del alternador", "%", 16, 0, (0x21,), 1.0, 0, 100),
+    KwpSignalDefinition("VAG_CAMSHAFT_SPEED", "Velocidad del árbol de levas", "rpm", 51, 1, (0x01,), 1.0, 0, 4500),
+    KwpSignalDefinition("VAG_RADIATOR_OUTLET_TEMP", "Refrigerante a la salida del radiador", "°C", 62, 1, (0x1A,), 1.0, -40, 150),
+    KwpSignalDefinition("VAG_COOLING_FAN_COMMAND", "Mando del ventilador del radiador", "%", 64, 2, (0x17,), 1.0, 0, 100),
     KwpSignalDefinition("VAG_INJECTOR_DEVIATION_1", "Corrección del inyector 1", "mg/str", 13, 0, (0x33,), 1.0, -10, 10),
     KwpSignalDefinition("VAG_INJECTOR_DEVIATION_2", "Corrección del inyector 2", "mg/str", 13, 1, (0x33,), 1.0, -10, 10),
     KwpSignalDefinition("VAG_INJECTOR_DEVIATION_3", "Corrección del inyector 3", "mg/str", 13, 2, (0x33,), 1.0, -10, 10),

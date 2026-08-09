@@ -163,6 +163,29 @@ def test_ppd_torsion_and_switch_time_binary_types_are_decoded():
     assert result["unit"] == "ms"
 
 
+def test_real_bkp_cooling_alternator_and_camshaft_blocks_are_named_and_decoded():
+    client = VagKwp2000Client(FakeConnection())
+    payloads = {
+        16: bytes.fromhex("611021FF4B10FFDC36000015E435250000250000250000250000"),
+        51: bytes.fromhex("61330114D2010AD2080A0310FF40250000250000250000250000"),
+        62: bytes.fromhex("613E1A32671A325E0573671A325E250000250000250000250000"),
+        64: bytes.fromhex("61401A32671A325E176478250000250000250000250000250000"),
+    }
+    client.transport.request = lambda request: payloads[request[1]]
+
+    alternator = client.read_signal("VAG_ALTERNATOR_LOAD", use_cache=False)
+    camshaft = client.read_signal("VAG_CAMSHAFT_SPEED", use_cache=False)
+    radiator = client.read_signal("VAG_RADIATOR_OUTLET_TEMP", use_cache=False)
+    ambient = client.read_signal("VAG_AMBIENT_TEMP")
+    fan = client.read_signal("VAG_COOLING_FAN_COMMAND", use_cache=False)
+
+    assert alternator["success"] is True and alternator["value"] == 29.4118
+    assert camshaft["success"] is True and camshaft["value"] == 420.0
+    assert radiator["success"] is True and radiator["value"] == 44.0
+    assert ambient["success"] is True and ambient["value"] == 34.5
+    assert fan["success"] is True and fan["value"] == 46.875
+
+
 def test_real_ppd_group_18_status_payload_uses_status_byte():
     client = VagKwp2000Client(FakeConnection())
     client.transport.request = lambda payload: bytes.fromhex(

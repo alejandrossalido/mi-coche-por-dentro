@@ -165,6 +165,9 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
         {category === 'motor' && <>
           <Gauge label="Revoluciones del motor" value={values.RPM} unit="RPM" max={9000} color="#ff5a1f" variant="hero" />
           <Gauge label="Velocidad del vehículo" value={values.SPEED} unit="KM/H" max={340} color="#c7ff35" variant="hero" />
+          {shouldShow('VAG_CAMSHAFT_SPEED') && <Gauge label="Velocidad del árbol de levas" value={values.VAG_CAMSHAFT_SPEED} unit="RPM" max={4500} color="#00dcff" statusText={statusFor(values.VAG_CAMSHAFT_SPEED, 'VAG_CAMSHAFT_SPEED')} />}
+          {shouldShow('VAG_ENGINE_TORQUE') && <Gauge label="Par calculado del motor" value={values.VAG_ENGINE_TORQUE} unit="NM" min={-100} max={450} color="#ff2e9f" statusText={statusFor(values.VAG_ENGINE_TORQUE, 'VAG_ENGINE_TORQUE')} />}
+          {shouldShow('VAG_DRIVER_TORQUE_REQUEST') && <Gauge label="Par solicitado por el conductor" value={values.VAG_DRIVER_TORQUE_REQUEST} unit="NM" min={-100} max={450} color="#ffca28" statusText={statusFor(values.VAG_DRIVER_TORQUE_REQUEST, 'VAG_DRIVER_TORQUE_REQUEST')} />}
           {shouldShow('ENGINE_LOAD') && <Gauge label="Carga del motor" value={values.ENGINE_LOAD} unit="%" max={100} color="#ff2e9f" statusText={statusFor(values.ENGINE_LOAD, 'ENGINE_LOAD')} />}
           <Gauge label="Pedal del acelerador" value={accelerator} unit="%" max={100} color="#ffca28" statusText={statusFor(accelerator, 'VAG_ACCELERATOR_POSITION', 'ACCELERATOR_POS_D', 'ACCELERATOR_POS_E', 'RELATIVE_ACCEL_POS')} />
           {shouldShow('THROTTLE_POS') && <Gauge label="Mariposa de admisión" value={values.THROTTLE_POS} unit="%" max={100} color="#00dcff" statusText={statusFor(values.THROTTLE_POS, 'THROTTLE_POS')} />}
@@ -173,6 +176,8 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
 
         {category === 'temp' && <>
           <Gauge label="Refrigerante (ECT)" value={values.COOLANT_TEMP} unit="°C" max={120} color="#ffca28" />
+          {shouldShow('VAG_RADIATOR_OUTLET_TEMP') && <Gauge label="Refrigerante a la salida del radiador" value={values.VAG_RADIATOR_OUTLET_TEMP} unit="°C" max={120} color="#c7ff35" statusText={statusFor(values.VAG_RADIATOR_OUTLET_TEMP, 'VAG_RADIATOR_OUTLET_TEMP')} />}
+          {shouldShow('VAG_COOLING_FAN_COMMAND') && <Gauge label="Mando del ventilador del radiador" value={values.VAG_COOLING_FAN_COMMAND} unit="%" max={100} color="#ff2e9f" statusText={statusFor(values.VAG_COOLING_FAN_COMMAND, 'VAG_COOLING_FAN_COMMAND')} />}
           <Gauge label="Aire de admisión (IAT)" value={values.INTAKE_TEMP} unit="°C" max={80} color="#00dcff" />
           <Gauge label="Aceite del motor" value={oilTemperature} unit="°C" max={140} color="#ff5a1f" statusText={statusFor(oilTemperature, 'VAG_OIL_TEMP', 'OIL_TEMP')} />
           <Gauge label="Temperatura ambiente" value={ambientTemperature} unit="°C" min={-30} max={60} color="#c7ff35" statusText={statusFor(ambientTemperature, 'VAG_AMBIENT_TEMP', 'AMBIANT_AIR_TEMP')} />
@@ -226,6 +231,7 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
 
         {category === 'elec' && <>
           <Gauge label="Módulo de control" value={moduleVoltage} unit="V" min={10} max={16} color="#c7ff35" statusText={statusFor(moduleVoltage, 'VAG_ECU_VOLTAGE', 'CONTROL_MODULE_VOLTAGE')} />
+          {shouldShow('VAG_ALTERNATOR_LOAD') && <Gauge label="Carga del alternador" value={values.VAG_ALTERNATOR_LOAD} unit="%" max={100} color="#ffca28" statusText={statusFor(values.VAG_ALTERNATOR_LOAD, 'VAG_ALTERNATOR_LOAD')} />}
           {shouldShow('ELM_VOLTAGE') && <Gauge label="Alimentación del adaptador OBD" value={values.ELM_VOLTAGE} unit="V" min={10} max={16} color="#00dcff" statusText={statusFor(values.ELM_VOLTAGE, 'ELM_VOLTAGE')} />}
         </>}
       </div>

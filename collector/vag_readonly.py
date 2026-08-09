@@ -73,6 +73,8 @@ class VagSignalDefinition:
 VAG_SIGNAL_TARGETS: tuple[Dict[str, str], ...] = (
     {"pid_name": "VAG_OIL_TEMP", "label": "Temperatura del aceite", "unit": "°C"},
     {"pid_name": "VAG_AMBIENT_TEMP", "label": "Temperatura ambiente", "unit": "°C"},
+    {"pid_name": "VAG_RADIATOR_OUTLET_TEMP", "label": "Refrigerante a la salida del radiador", "unit": "°C"},
+    {"pid_name": "VAG_COOLING_FAN_COMMAND", "label": "Mando del ventilador del radiador", "unit": "%"},
     {"pid_name": "VAG_EXHAUST_TEMP_1", "label": "Temperatura de escape 1", "unit": "°C"},
     {"pid_name": "VAG_EXHAUST_TEMP_2", "label": "Temperatura de escape 2", "unit": "°C"},
     {"pid_name": "VAG_BAROMETRIC_PRESSURE", "label": "Presión barométrica", "unit": "kPa"},
@@ -101,6 +103,8 @@ VAG_SIGNAL_TARGETS: tuple[Dict[str, str], ...] = (
     {"pid_name": "VAG_DPF_TIME_SINCE_REGEN", "label": "Tiempo desde la última regeneración", "unit": "s"},
     {"pid_name": "VAG_DPF_REGEN_STATUS", "label": "Estado de regeneración del DPF", "unit": "state_code"},
     {"pid_name": "VAG_ECU_VOLTAGE", "label": "Tensión medida por la ECU", "unit": "V"},
+    {"pid_name": "VAG_ALTERNATOR_LOAD", "label": "Carga del alternador", "unit": "%"},
+    {"pid_name": "VAG_CAMSHAFT_SPEED", "label": "Velocidad del árbol de levas", "unit": "rpm"},
 )
 
 

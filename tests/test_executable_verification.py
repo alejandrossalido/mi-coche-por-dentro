@@ -9,8 +9,9 @@ def test_reproducible_desktop_build_files_exist():
         "MiCochePorDentro.spec",
         os.path.join("scripts", "build_windows.ps1"),
         os.path.join("scripts", "smoke_test_windows.ps1"),
-        os.path.join("docs", "DESKTOP_BUILD.md"),
-        os.path.join("docs", "TROUBLESHOOTING.md"),
+        os.path.join("docs", "INSTALACION.md"),
+        os.path.join("docs", "informacion_tecnica", "compilacion_y_pruebas", "DESKTOP_BUILD.md"),
+        os.path.join("docs", "informacion_tecnica", "compilacion_y_pruebas", "TROUBLESHOOTING.md"),
     ]
     for relative_path in required:
         assert os.path.isfile(os.path.join(project_root, relative_path))

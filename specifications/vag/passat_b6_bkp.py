@@ -1,8 +1,8 @@
 """
 Especificación Técnica OEM Confirmada para Volkswagen Passat B6 2.0 TDI (Motor BKP).
 Motor: BKP (2.0 TDI 16V 140 CV Sin DPF)
-Sistema de inyección: Piezo Bomba-Inyector (Siemens VDO PPD 1.2)
-ECU: Siemens VDO Simos PPD1.2
+Sistema de inyección: Piezo Bomba-Inyector (Siemens/VDO PPD 1.5)
+ECU verificada: Siemens/VDO PPD1.5, referencia 03G 906 018 FG
 """
 from typing import Dict, Any
 
@@ -19,8 +19,8 @@ VAG_PASSAT_B6_BKP_SPEC: Dict[str, Any] = {
         "fuel_type": "Diésel",
         "powertrain_type": "diesel",
         "injection_type": "piezo_pumpe_duese",
-        "injection_system": "Piezo-Bomba Inyector Siemens VDO (PPD 1.2)",
-        "ecu_family": "Siemens VDO Simos PPD1.2",
+        "injection_system": "Piezo-Bomba Inyector Siemens/VDO (PPD 1.5)",
+        "ecu_family": "Siemens/VDO PPD1.5 (03G 906 018 FG)",
         "turbocharger": "Garrett GT1749VA VNT",
         "dpf_fitted": False,
         "emissions_standard": "Euro 4 sin DPF",
@@ -38,7 +38,7 @@ VAG_PASSAT_B6_BKP_SPEC: Dict[str, Any] = {
             "target": 830,
             "maximum": 860,
             "source_type": "OEM_CONFIRMED",
-            "document": "VW Manual PPD1.2 Diagnostics",
+            "document": "VW Manual PPD1.5 Diagnostics",
             "section": "MVB 001 Idle Speed Control"
         },
         "coolant_temperature": {
@@ -60,7 +60,7 @@ VAG_PASSAT_B6_BKP_SPEC: Dict[str, Any] = {
             "target": 1.38,
             "maximum": 1.48,
             "source_type": "OEM_CONFIRMED",
-            "document": "VW PPD1.2 Technical Diagnostics",
+            "document": "VW PPD1.5 Technical Diagnostics",
             "section": "MVB 011 Charge Air Pressure"
         }
     }

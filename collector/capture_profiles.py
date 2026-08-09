@@ -32,7 +32,9 @@ PREDEFINED_PROFILES: Dict[str, Dict[str, Any]] = {
             "VAG_DPF_SOOT_CALCULATED", "VAG_DPF_SOOT_MEASURED", "VAG_DPF_DIFFERENTIAL_PRESSURE",
             "VAG_DPF_DISTANCE_SINCE_REGEN", "VAG_DPF_TIME_SINCE_REGEN", "VAG_DPF_REGEN_STATUS",
             "VAG_ECU_VOLTAGE", "VAG_AIR_MASS_ACTUAL", "VAG_EGR_DUTY_CYCLE",
-            "VAG_INJECTION_QUANTITY", "VAG_DPF_SOOT_PERCENT", "VAG_DPF_ASH_MASS"
+            "VAG_INJECTION_QUANTITY", "VAG_DPF_SOOT_PERCENT", "VAG_DPF_ASH_MASS",
+            "VAG_ALTERNATOR_LOAD", "VAG_CAMSHAFT_SPEED", "VAG_RADIATOR_OUTLET_TEMP",
+            "VAG_COOLING_FAN_COMMAND"
         ],
         "recommended_duration_sec": 600,
         "steps": [
@@ -48,7 +50,7 @@ PREDEFINED_PROFILES: Dict[str, Dict[str, Any]] = {
         "id": "COLD_START",
         "name": "Arranque en Frío",
         "description": "Estudia tensión de batería, arranque, temperatura ambiental/refrigerante y estabilización inicial.",
-        "pids": ["CONTROL_MODULE_VOLTAGE", "ELM_VOLTAGE", "VAG_ECU_VOLTAGE", "RPM", "COOLANT_TEMP", "INTAKE_TEMP", "OIL_TEMP", "VAG_OIL_TEMP", "AMBIANT_AIR_TEMP", "VAG_AMBIENT_TEMP", "MAF", "VAG_AIR_MASS_ACTUAL", "INTAKE_PRESSURE", "BAROMETRIC_PRESSURE", "VAG_BAROMETRIC_PRESSURE", "SHORT_FUEL_TRIM_1", "LONG_FUEL_TRIM_1", "RUN_TIME"],
+        "pids": ["CONTROL_MODULE_VOLTAGE", "ELM_VOLTAGE", "VAG_ECU_VOLTAGE", "VAG_ALTERNATOR_LOAD", "RPM", "VAG_CAMSHAFT_SPEED", "COOLANT_TEMP", "VAG_RADIATOR_OUTLET_TEMP", "VAG_COOLING_FAN_COMMAND", "INTAKE_TEMP", "OIL_TEMP", "VAG_OIL_TEMP", "AMBIANT_AIR_TEMP", "VAG_AMBIENT_TEMP", "MAF", "VAG_AIR_MASS_ACTUAL", "INTAKE_PRESSURE", "BAROMETRIC_PRESSURE", "VAG_BAROMETRIC_PRESSURE", "SHORT_FUEL_TRIM_1", "LONG_FUEL_TRIM_1", "RUN_TIME"],
         "recommended_duration_sec": 300
     },
     "IDLE_STABILITY": {
@@ -69,7 +71,7 @@ PREDEFINED_PROFILES: Dict[str, Dict[str, Any]] = {
         "id": "WARMUP_CURVE",
         "name": "Curva de Calentamiento",
         "description": "Estudia el tiempo de subida de temperatura del refrigerante y termostato.",
-        "pids": ["COOLANT_TEMP", "INTAKE_TEMP", "OIL_TEMP", "VAG_OIL_TEMP", "AMBIANT_AIR_TEMP", "VAG_AMBIENT_TEMP", "SPEED", "ENGINE_LOAD", "RUN_TIME", "RPM"],
+        "pids": ["COOLANT_TEMP", "VAG_RADIATOR_OUTLET_TEMP", "VAG_COOLING_FAN_COMMAND", "INTAKE_TEMP", "OIL_TEMP", "VAG_OIL_TEMP", "AMBIANT_AIR_TEMP", "VAG_AMBIENT_TEMP", "SPEED", "ENGINE_LOAD", "RUN_TIME", "RPM"],
         "recommended_duration_sec": 600
     },
     "CUSTOM": {
@@ -83,7 +85,7 @@ PREDEFINED_PROFILES: Dict[str, Dict[str, Any]] = {
         "id": "BATTERY_CHARGING",
         "name": "Batería y alternador",
         "description": "Comprueba caída de tensión, recuperación y estabilidad del sistema de carga.",
-        "pids": ["CONTROL_MODULE_VOLTAGE", "VAG_ECU_VOLTAGE", "ELM_VOLTAGE", "RPM", "ENGINE_LOAD", "RUN_TIME"],
+        "pids": ["CONTROL_MODULE_VOLTAGE", "VAG_ECU_VOLTAGE", "ELM_VOLTAGE", "VAG_ALTERNATOR_LOAD", "RPM", "ENGINE_LOAD", "RUN_TIME"],
         "recommended_duration_sec": 180,
         "steps": [
             {"at_sec": 0, "title": "Ralentí sin consumidores", "instruction": "Mantén el motor al ralentí con luces y climatización apagados."},
@@ -95,7 +97,7 @@ PREDEFINED_PROFILES: Dict[str, Dict[str, Any]] = {
         "id": "COOLING_SYSTEM",
         "name": "Termostato y refrigeración",
         "description": "Evalúa velocidad de calentamiento, temperatura máxima y estabilidad térmica.",
-        "pids": ["COOLANT_TEMP", "INTAKE_TEMP", "OIL_TEMP", "VAG_OIL_TEMP", "AMBIANT_AIR_TEMP", "VAG_AMBIENT_TEMP", "RPM", "SPEED", "ENGINE_LOAD", "RUN_TIME"],
+        "pids": ["COOLANT_TEMP", "VAG_RADIATOR_OUTLET_TEMP", "VAG_COOLING_FAN_COMMAND", "INTAKE_TEMP", "OIL_TEMP", "VAG_OIL_TEMP", "AMBIANT_AIR_TEMP", "VAG_AMBIENT_TEMP", "RPM", "SPEED", "ENGINE_LOAD", "RUN_TIME"],
         "recommended_duration_sec": 600,
         "steps": [
             {"at_sec": 0, "title": "Inicio térmico", "instruction": "Registra la temperatura inicial con el motor frío o templado."},

@@ -41,12 +41,19 @@ tres bytes en cada bloque, aunque los cuatro primeros mantienen la disposición
 documentada por la familia BKP. La versión 1.7.1 acepta esta respuesta extendida
 y conserva los campos auxiliares sin asignarles un significado no confirmado.
 
-En la prueba real quedaron verificados 21 canales KWP: RPM, refrigerante,
-velocidad, aire de admisión, aceite, presión barométrica, pedal, masa de aire,
-EGR solicitada/real y mando, turbo solicitado/real, inicio y cantidad de
-inyección, consumo, cuatro correcciones de inyector y tensión de ECU. Los
-bloques 068 y 069 devolvieron únicamente marcadores vacíos, por lo que los
-datos DPF no se presentan como ceros reales.
+Las pruebas reales verifican, entre otros canales, RPM, velocidad, temperaturas
+de refrigerante, radiador, admisión, aceite, combustible y ambiente, presión
+barométrica, pedal, masa de aire, EGR, turbo, inicio/cantidad/duración de
+inyección, consumo, par, correcciones y estados de los inyectores, tensión de
+ECU, carga del alternador, velocidad del árbol de levas y mando del ventilador.
+Cada nombre conserva la trama cruda que permitió validarlo. Los bloques 068 y
+069 devolvieron únicamente marcadores vacíos; como este BKP concreto no lleva
+DPF de fábrica, esos recuadros no se presentan como ceros ni como datos reales.
+
+En la sesión real usada para validar la ampliación, el radiador entregó
+45–48 °C, el mando del ventilador 46,5–56,3 %, la carga del alternador 31–49 %
+y el árbol de levas 400–920 rpm. Son lecturas KWP2000 directas de la ECU, no
+estimaciones calculadas por la interfaz.
 
 ## Diagnóstico específico de consumo (versión 1.8)
 
