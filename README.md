@@ -7,7 +7,8 @@ Aplicación local para registrar telemetría OBD-II, guardar sesiones de diagnó
 ## Las dos guías principales
 
 1. Este documento explica cómo instalar, abrir y utilizar la aplicación por primera vez.
-2. La [Guía de uso e importación de vehículos con IA](docs/GUIA_USO_E_IMPORTACION_CON_IA.md) explica el uso avanzado y contiene un prompt completo para ampliar la compatibilidad de un coche con Codex u otro agente de programación.
+2. La [Guía de uso e importación de vehículos con IA](docs/GUIA_USO_E_IMPORTACION_CON_IA.md) explica cómo identificar, investigar, documentar y validar una integración avanzada.
+3. El [prompt maestro para importar un vehículo](docs/PROMPT_IMPORTAR_VEHICULO_CON_IA.md) está listo para copiar: normalmente solo hay que escribir el modelo, año, motor y potencia conocidos.
 
 ## Qué hace la aplicación
 

@@ -1,313 +1,217 @@
-# Guía de uso e importación de vehículos con IA
+# Guía para añadir e integrar un vehículo con IA
 
-Esta es la guía avanzada de **Mi Coche por Dentro**. Explica cómo utilizar las capturas con rigor y cómo ampliar la compatibilidad de un vehículo mediante Codex u otro agente capaz de inspeccionar, modificar y probar el repositorio.
+Esta guía permite ampliar **Mi Coche por Dentro** para un coche nuevo con ayuda de Codex u otro agente de programación con acceso al repositorio, Internet y documentos técnicos.
 
-## 1. Dos operaciones diferentes
+> **Resultado realista:** el agente puede investigar e implementar gran parte de la compatibilidad, pero ningún prompt garantiza todos los datos de cualquier coche. Los parámetros propietarios dependen del motor, la ECU y su software; la integración solo queda confirmada después de probarla con el vehículo real.
 
-### Añadir un vehículo al garaje
+## 1. Dos niveles de incorporación
 
-Se hace desde **Añadir vehículo** y no requiere programación. El coche obtiene cobertura OBD-II genérica y solo se muestran las señales que responden.
+### Añadirlo al garaje
 
-### Integrar compatibilidad avanzada
+Se hace desde **Añadir vehículo**. No requiere programar y permite utilizar los PIDs OBD-II/EOBD genéricos que el coche anuncie y responda.
 
-Significa investigar e implementar señales propietarias, referencias OEM y reglas específicas para una combinación concreta de vehículo, motor y ECU. Requiere código, documentación técnica, pruebas automatizadas y al menos una validación con el coche real.
+### Crear compatibilidad avanzada
 
-Un perfil de `Volkswagen Passat B6` no es suficiente por sí solo: BKP/BMP con inyector-bomba y CBAB/CBBB common-rail pueden utilizar centralitas, bloques y magnitudes diferentes. La clave correcta suele ser:
+Añade identificación específica, transporte del fabricante, señales propietarias, fórmulas, unidades, presentación dinámica y reglas diagnósticas para una variante concreta. Requiere investigación, código, pruebas automáticas y una validación segura con el coche real.
+
+## 2. Lo único que debe escribir el usuario
+
+En la mayoría de los casos basta con una línea bien formulada:
 
 ```text
-marca + modelo + generación + año + mercado + motor + código de motor + referencia/calibración de ECU
+Volkswagen Golf VII, 2016, 2.0 TDI 150 CV, diésel, mercado europeo
 ```
 
-## 2. Información que debe reunir el usuario
+Los datos mínimos recomendados son:
 
-No inventes los campos desconocidos. Es preferible indicar `DESCONOCIDO` y dejar que el agente prepare una fase segura de identificación.
+| Dato | Por qué ayuda |
+|---|---|
+| Marca, modelo y generación | Evita mezclar plataformas con el mismo nombre comercial |
+| Año aproximado | Acota restylings, normativa y familia electrónica |
+| Combustible, motor/cilindrada y potencia | Suele distinguir variantes mecánicas y ECUs |
+| Mercado, si se conoce | Un mismo modelo puede cambiar entre Europa, EE. UU. u otros mercados |
 
-### Identidad del vehículo
+No hace falta conocer de antemano código de motor, tipo de inyección, ECU, protocolo, norma de emisiones o equipamiento anticontaminación. El agente debe investigarlos. Si descubre dos variantes todavía posibles, pedirá **solo el dato que realmente las diferencie**: por ejemplo, código de motor, potencia en kW, mes de fabricación o referencia de ECU.
 
-- Marca y modelo exactos.
-- Generación o plataforma.
-- Año y, si se conoce, mes de fabricación.
-- Mercado: Europa, Estados Unidos, Latinoamérica u otro.
-- Acabado o variante.
-- Tipo de propulsión: gasolina, diésel, híbrido, PHEV o eléctrico.
-- Cilindrada, potencia y tipo de inyección.
-- Código de motor exacto.
-- Norma de emisiones.
-- Presencia de turbo, EGR, DPF/GPF, SCR/AdBlue y sensores relevantes.
+Son opcionales, pero aceleran mucho el trabajo:
 
-### Identidad electrónica
+- código de motor o foto anonimizada de la etiqueta técnica;
+- referencia y software de la ECU obtenidos por diagnosis;
+- capturas de la aplicación y lista de señales que quedan en `--`;
+- una sesión OBD anonimizada;
+- manuales o documentación técnica que el usuario posea legalmente.
 
-- Marca/familia de ECU si se conoce.
-- Número de pieza de ECU y versión de software o calibración.
-- Protocolo detectado por la aplicación.
-- Dirección de diagnóstico si aparece en una herramienta fiable.
-- Adaptador utilizado, conexión USB/Bluetooth y versión de firmware.
-- Captura del mensaje de conexión y del inventario de capacidades.
+No se necesita matrícula ni VIN completo. Si excepcionalmente hacen falta caracteres del VIN para distinguir una variante, comparte únicamente los mínimos y no los publiques en el repositorio.
 
-No es necesario compartir matrícula ni VIN completo. Si un documento incluye datos personales, anonimizarlos antes de adjuntarlo.
+## 3. Cómo debe identificar el agente el coche
 
-### Evidencia de funcionamiento
+El nombre comercial no es una identidad técnica. Antes de aplicar PIDs o fórmulas, el agente debe construir este expediente:
 
-- Qué señales aparecen y cuáles quedan en `--`.
-- Una sesión corta a ralentí con motor caliente.
-- Si es seguro, una sesión controlada con variación de RPM y carga.
-- Valores mostrados por una herramienta de referencia, indicando herramienta y unidad.
-- Transcripción OBD anonimizada o respuestas crudas necesarias para decodificar.
-- Síntomas reales, DTC y condiciones en las que ocurren.
+```text
+modelo y plataforma
+→ intervalo de fabricación y mercado
+→ familia de motor, potencia y sistema de inyección/propulsión
+→ código de motor probable o confirmado
+→ sistemas de emisiones instalados
+→ familia, referencia y software de ECU
+→ protocolo y direccionamiento de diagnóstico
+```
 
-## 3. Principios obligatorios de una integración correcta
+Cada elemento se marca como `confirmado`, `probable`, `ambiguo` o `desconocido`, junto a su fuente. Un perfil parecido sirve para orientar la búsqueda, no para copiar identificadores o escalas.
 
-1. **Solo lectura.** No se permiten codificación, adaptación, borrado, actuadores, rutinas ni escrituras de memoria.
-2. **Nada inventado.** Un nombre parecido en Internet no demuestra que la ECU responda ese PID ni que utilice la misma escala.
-3. **Separar procedencias.** Diferenciar dato medido por ECU, dato calculado, estimación, simulación y dato ausente.
-4. **Verificar identidad antes de decodificar.** Una fórmula válida para otra variante puede producir cifras plausibles pero falsas.
-5. **Conservar evidencia.** Cada señal propietaria debe poder relacionarse con una respuesta, una fórmula, una unidad y una fuente.
-6. **Ocultar lo no disponible.** Si la ECU no ofrece una magnitud o no puede validarse, la tarjeta no debe aparecer como si estuviera pendiente eternamente.
-7. **No usar simulación como respaldo de producción.** Los valores simulados solo pertenecen al modo de demostración y a pruebas.
-8. **Validar comportamiento, no solo rango.** Una presión debe reaccionar coherentemente a la carga; una temperatura debe evolucionar con continuidad.
-9. **Controlar carga del bus.** Más PIDs no siempre significan mejores datos. Hay que medir latencia, frecuencia y respuestas perdidas.
-10. **Probar todo cambio.** Backend, interfaz, inicio, cierre, base vacía y paquete Windows.
+La investigación debe detener la implementación propietaria si siguen existiendo variantes incompatibles. El OBD-II genérico puede mantenerse operativo mientras se resuelve la identidad.
 
-## 4. Flujo recomendado con Codex
+## 4. Investigación documental, incluidos PDF
 
-### Fase 1: abrir el proyecto y aportar el contexto
+El agente debe buscar activamente documentación técnica y conservar una trazabilidad breve de lo encontrado.
 
-Abre en Codex la carpeta de la versión pública. Adjunta la información del vehículo, capturas y registros anonimizados. Pega el prompt maestro de la sección 7.
+### Prioridad de fuentes
 
-### Fase 2: auditoría sin conectar el coche
+1. Portales, manuales de taller, boletines, documentación de diagnosis y programas de formación del fabricante.
+2. Normas SAE/ISO y documentación oficial del proveedor de ECU, adaptador o herramienta.
+3. Catálogos de recambios y homologaciones que permitan confirmar motor, potencia, emisiones o ECU.
+4. Proyectos técnicos reproducibles, documentación de herramientas reconocidas y bases comunitarias con respuestas crudas verificables.
+5. Foros o vídeos, únicamente como pistas que deben contrastarse.
 
-El agente debe inspeccionar la arquitectura existente, localizar los perfiles parecidos y presentar:
+### Búsqueda recomendada
 
-- cobertura estándar esperable;
-- posibles protocolos propietarios;
-- datos que faltan para identificar la variante;
-- riesgos de confundir motores o ECUs;
-- plan de implementación y validación.
+Combina la denominación exacta, plataforma, código de motor, ECU y términos técnicos. Ejemplos:
 
-La primera fase no debe asumir que todos los PIDs encontrados en una lista externa son compatibles.
+```text
+"[modelo]" "[código motor]" workshop manual filetype:pdf
+"[código motor]" ECU diagnostic protocol measuring blocks
+"[referencia ECU]" PID DID data identifier
+site:[dominio oficial] "[modelo/plataforma]" filetype:pdf
+"[modelo]" self study programme engine management pdf
+"[modelo]" DPF differential pressure regeneration diagnostic
+```
 
-### Fase 3: crear el vehículo básico
+Al encontrar un PDF, el agente debe:
 
-Añade el coche desde el Garaje. Introduce el código de motor si está confirmado. La aplicación asignará un UUID local; el código no debe depender de ese UUID ni precargar el coche en instalaciones ajenas.
+1. verificar autor/editor, título, versión, fecha, mercado y variante aplicable;
+2. descargarlo solo desde una fuente legítima y leerlo completo o buscar dentro por modelo, código de motor, ECU, `diagnosis`, `data identifier`, `measuring block`, `live data`, `injection`, `turbo`, `EGR`, `DPF/GPF`, `SCR`, `CAN`, `KWP`, `UDS` y unidades;
+3. usar OCR si es un escaneo y comprobar manualmente tablas o fórmulas importantes;
+4. anotar URL, título, revisión, páginas relevantes y qué afirmación respalda;
+5. contrastar identificadores, escalas y unidades con otra fuente o con una respuesta real de la ECU;
+6. no subir al repositorio PDF con copyright, de pago, datos personales o licencia incompatible; guardar en el proyecto únicamente citas, enlaces, metadatos y conocimiento derivado permitido.
 
-### Fase 4: identificación y descubrimiento seguro
+No se deben eludir pagos, credenciales ni controles de acceso. Si la documentación esencial está en un portal autorizado al que el agente no puede acceder, debe indicar exactamente qué documento necesita que aporte el usuario.
 
-Con contacto puesto y el vehículo detenido:
+### Fuerza de la evidencia
 
-1. Conecta el adaptador.
-2. Guarda puerto, protocolo, latencia y tensión.
-3. Ejecuta la identificación de fabricante si existe.
-4. Conserva el número de pieza/calibración y los grupos que responden.
-5. No continúes enviando peticiones si la ECU deja de responder o la tensión es inadecuada.
+| Nivel | Evidencia | Uso permitido |
+|---|---|---|
+| A | Documento primario aplicable + respuesta real coherente | Señal verificada |
+| B | Fuente técnica sólida + respuesta real coherente | Implementación con trazabilidad |
+| C | Fuente de variante cercana o sin captura real | Candidata pendiente, nunca dato confirmado |
+| D | Foro, lista sin procedencia o deducción | Pista de investigación, no implementación productiva |
 
-Si el agente necesita una nueva captura, debe indicar exactamente qué prueba hacer, cuánto debe durar, qué condiciones son seguras y qué archivo o captura devolver.
+## 5. Flujo de integración
 
-### Fase 5: implementar por capas
+### 1. Auditar antes de cambiar
+
+El agente lee `README.md`, esta guía, la arquitectura, perfiles existentes, transportes, descubrimiento, informes y pruebas. Ejecuta la suite actual para separar fallos previos de los nuevos.
+
+### 2. Resolver la identidad
+
+Investiga el coche con los datos mínimos, crea una tabla de variantes posibles y descarta cada una con fuentes. Si queda una ambigüedad bloqueante, formula una única pregunta concreta o prepara una lectura de identificación segura.
+
+### 3. Crear el perfil básico
+
+El vehículo se crea desde el Garaje. El código nunca debe depender del UUID local del coche ni añadir vehículos personales a una instalación nueva.
+
+### 4. Crear una matriz de cobertura
+
+Antes de implementar, registrar por señal:
+
+| Campo | Contenido |
+|---|---|
+| Señal canónica | Nombre estable en la aplicación |
+| Utilidad | Qué permite observar o diagnosticar |
+| Fuente | OBD estándar, DID, bloque, cálculo, etc. |
+| Identificador y respuesta | Servicio, PID/DID/grupo y bytes esperados |
+| Decodificación | Longitud, endianess, signo, factor, offset y fórmula |
+| Unidad y rango | Unidad canónica y límites físicos |
+| Aplicabilidad | Motor/ECU/software al que corresponde |
+| Evidencia | Fuente, páginas y captura real |
+| Estado | verificada, candidata, no soportada u oculta |
+
+### 5. Implementar por capas
 
 Orden recomendado:
 
-1. Identidad del vehículo y resolución de ficha técnica.
-2. PIDs OBD-II estándar realmente soportados.
-3. Transporte de fabricante y direccionamiento de solo lectura.
-4. Catálogo de señales propietarias con fórmulas y unidades.
-5. Descubrimiento de capacidades por ECU.
-6. Presentación dinámica: mostrar solo señales aplicables y verificadas.
-7. Reglas diagnósticas y referencias específicas.
-8. Pruebas, documentación y paquete de escritorio.
+1. resolución de ficha e identidad;
+2. PIDs OBD-II realmente soportados;
+3. transporte y direccionamiento de fabricante, solo lectura;
+4. catálogo de señales propietarias;
+5. inventario de capacidades de esa ECU;
+6. interfaz que muestre solo señales aplicables;
+7. cálculos derivados y reglas diagnósticas;
+8. pruebas, documentación, compilación y paquete Windows.
 
-### Fase 6: validar con datos reales
+### 6. Probar con el coche real
 
-Para cada señal se debe registrar:
+El agente debe entregar una prueba corta y segura: estado del contacto/motor, temperatura, duración, acciones, límites de RPM/carga, señales objetivo, archivos que devolver y criterios de aborto por tensión, latencia o pérdida de respuestas.
 
-| Campo | Ejemplo de resultado |
-|---|---|
-| Nombre canónico | `BOOST_ACTUAL` |
-| Servicio/PID/grupo | Identificador exacto |
-| Respuesta cruda | Bytes anonimizados |
-| Fórmula | Conversión reproducible |
-| Unidad | kPa absolutos |
-| Procedencia | `measured_manufacturer` |
-| Estado | verificada / pendiente / no soportada |
-| Evidencia | captura, fuente y prueba |
-| Rango observado | mínimo y máximo reales |
-| Comportamiento | variación coherente con carga |
+Primero se valida detenido. Una prueba en carretera exige acompañante: el conductor nunca debe manejar el ordenador.
 
-Una cifra plausible no basta. Conviene comparar con otra herramienta y repetir en más de una condición.
+## 6. Reglas que nunca deben romperse
 
-## 5. Casos especialmente delicados
+- Solo lectura: sin codificación, adaptación, borrado de DTC, actuadores, rutinas, desbloqueos ni flasheo.
+- No inventar PIDs, DID, grupos, bytes, fórmulas, unidades o compatibilidad.
+- Separar datos medidos, calculados, inferidos, simulados, obsoletos y ausentes.
+- Un timeout o un cero artificial nunca es una medición.
+- Ocultar tarjetas definitivamente no soportadas; dejar pendientes solo si existe una vía concreta de validación.
+- No usar simulación como respaldo en producción.
+- Verificar comportamiento temporal, no solo que un número parezca razonable.
+- Vigilar latencia y carga del bus; más señales no compensan una captura inestable.
+- Usar datos temporales para las pruebas y no modificar el garaje real del desarrollador.
+- Añadir pruebas de respuestas válidas, no disponibles, truncadas, erróneas y de otra variante.
 
-### Consumo de combustible
+## 7. Magnitudes delicadas
 
-Prioridad de fuentes:
+### Consumo
 
-1. Caudal de combustible ofrecido directamente por la ECU.
-2. Cantidad de inyección por ciclo combinada con RPM y arquitectura confirmada del motor.
-3. Cálculo mediante MAF y relación aire/combustible, claramente etiquetado y con limitaciones.
+Priorizar caudal de combustible medido. Si no existe, calcular solo con entradas verificadas —por ejemplo, cantidad por ciclo, RPM y arquitectura confirmada— y etiquetarlo como derivado. El consumo medio integra combustible y distancia; no es la media aritmética del consumo instantáneo. Debe informar cobertura y excluir velocidad o muestras inválidas.
 
-El consumo instantáneo en `L/100 km` no es estable a velocidad muy baja. El consumo medio del trayecto debe integrar combustible y distancia durante toda la sesión, excluir periodos inválidos y mostrar cobertura/calidad. Nunca se debe presentar un valor calculado como si lo hubiese enviado directamente la ECU.
+### DPF, GPF y SCR
 
-### DPF y emisiones
-
-Hollín calculado, hollín medido, masa de ceniza, presión diferencial, temperaturas EGT y distancia desde regeneración pueden estar en servicios propietarios diferentes. Algunas ECUs no los ofrecen. No mezclar `I/M Readiness` con carga real del DPF ni inferir una regeneración solo por una temperatura aislada.
+Hollín calculado, hollín medido, ceniza, presión diferencial, EGT, regeneración y AdBlue suelen estar en servicios distintos. `I/M Readiness` no representa la carga del filtro. No deducir regeneración a partir de una sola temperatura.
 
 ### Turbo y EGR
 
-Confirmar si las presiones son absolutas o relativas. Comparar valor solicitado y real solo cuando ambos proceden de grupos correctamente decodificados y sincronizados. En EGR, masa de aire objetivo/real no equivale necesariamente a apertura porcentual de válvula.
+Confirmar presión absoluta frente a relativa y sincronizar valores solicitado/real. Masa de aire objetivo/real no equivale necesariamente al porcentaje de apertura EGR.
 
-### Vehículos eléctricos
+### Híbridos y eléctricos
 
-No aplicar PIDs de motor térmico. Muchos EV necesitan DoIP, CAN pasivo, un arnés específico o documentación DBC. Nunca sondear buses de seguridad ni enviar tramas de control sin un proyecto separado y revisado.
+No reutilizar perfiles térmicos. Pueden requerir ECUs múltiples, DoIP o acceso CAN específico. No sondear buses de seguridad ni enviar tramas de control.
 
-## 6. Cuándo considerar terminada la integración
+## 8. Prompt listo para copiar
 
-- El coche se crea desde una base vacía sin datos precargados.
-- La ficha se resuelve por identidad técnica, no por un ID personal.
-- La conexión genérica sigue funcionando si falla la capa propietaria.
-- Las señales verificadas muestran unidad, fuente y estado correctos.
-- Las no soportadas se ocultan o se explican claramente.
-- No aparecen datos simulados en producción.
-- La aplicación detecta respuestas obsoletas sin declarar falsamente una desconexión.
-- Los cálculos derivados incluyen sus condiciones de validez.
-- Pasan las pruebas Python, la compilación de la interfaz y la prueba del ejecutable.
-- Existe una tabla final de cobertura: recibida, calculada, pendiente y no disponible.
+El prompt completo, mantenido por separado para que sea fácil copiarlo, está en:
 
-## 7. Prompt rápido para empezar
+**[`PROMPT_IMPORTAR_VEHICULO_CON_IA.md`](PROMPT_IMPORTAR_VEHICULO_CON_IA.md)**
 
-Si solo quieres empezar sin rellenar todos los campos, copia este bloque y cambia la línea `COCHE EXACTO`. Después adjunta capturas de la app, logs, sesiones OBD o documentación técnica que tengas.
+Solo es obligatorio sustituir la línea `MI VEHÍCULO`. El resto de campos son opcionales: el agente debe investigar lo que falte y preguntar únicamente cuando una ambigüedad impida continuar con rigor.
 
-```text
-Quiero que integres y maximices de forma segura la compatibilidad de este coche en el proyecto local "Mi Coche por Dentro".
+## 9. Qué devolver después de una prueba
 
-COCHE EXACTO:
-[MARCA, MODELO, GENERACIÓN, AÑO, MOTOR, CÓDIGO DE MOTOR, MERCADO Y ECU SI SE CONOCE]
+- identificador y duración de la sesión;
+- contacto o motor encendido, frío/caliente y vehículo detenido/en marcha;
+- acciones realizadas;
+- texto exacto de cualquier error y momento aproximado;
+- capturas solicitadas y archivo de telemetría/log anonimizado;
+- valores de una herramienta de contraste, si existe.
 
-OBJETIVO:
-Investiga la documentación técnica disponible, protocolos OBD-II/UDS/KWP2000/CAN aplicables, PIDs estándar, identificadores propietarios, bloques de medición, fórmulas, unidades y limitaciones de esta variante concreta. Quiero obtener la máxima cantidad de datos reales y útiles posible: motor, temperaturas, admisión, turbo, EGR, combustible, inyección, consumo instantáneo y medio, sistema eléctrico, emisiones, DPF/GPF/SCR, DTC, Freeze Frame, monitores y Modo 06 cuando existan.
+## 10. Cuándo está terminada
 
-REGLAS:
-- Trabaja solo en lectura. No implementes escrituras, codificación, adaptación, borrado de errores, actuadores, rutinas ni flasheo.
-- No inventes PIDs, fórmulas ni compatibilidad. Si algo no está probado para esta ECU, márcalo como pendiente o no soportado.
-- Separa datos medidos por ECU, calculados, inferidos, simulados y ausentes.
-- Muestra en la interfaz solo señales reales, verificadas o con una ruta clara de validación. Oculta lo no soportado.
-- Protege privacidad: no uses VIN completo, matrícula, ubicación, claves ni datos personales.
-- Antes de pedir pruebas con el coche real, dime exactamente qué captura hacer, cuánto debe durar, qué condiciones usar y cuándo abortar.
+- La identidad técnica y sus incertidumbres están documentadas.
+- El coche funciona desde una base vacía y conserva el modo OBD genérico si falla la capa propietaria.
+- Cada señal visible tiene procedencia, unidad, estado y evidencia.
+- Las señales no soportadas se ocultan o explican con claridad.
+- Los datos derivados indican método y condiciones de validez.
+- No hay valores simulados ni datos personales en producción.
+- Pasan las pruebas Python, el build de la interfaz y el smoke test del ejecutable.
+- Existe una tabla final: medida, calculada, pendiente, no soportada y oculta.
 
-FORMA DE TRABAJO:
-Primero audita el repositorio completo. Después crea una matriz de compatibilidad con señal, protocolo/fuente, PID/DID/bloque, fórmula, unidad, evidencia, estado y método de validación. Implementa por capas, añade pruebas y ejecuta la suite antes de terminar. Si falta evidencia real, prepara un protocolo de captura seguro en vez de suponer resultados.
-```
-
-Este prompt está pensado para usarse con un modelo de programación potente, con acceso al repositorio y capacidad de leer documentación técnica. Cuanto más exacto sea el coche, mejor: no es lo mismo `Passat B6 2.0 TDI` que `Volkswagen Passat B6 2.0 TDI BKP, inyector-bomba, Europa, ECU EDC16`.
-
-## 8. Prompt maestro para integrar un vehículo con Codex
-
-Copia el bloque completo, sustituye los campos entre corchetes y adjunta las capturas o archivos disponibles. Si un dato no se conoce, escribe `DESCONOCIDO`.
-
-```text
-Quiero que integres y maximices de forma segura la compatibilidad del siguiente vehículo en el proyecto local "Mi Coche por Dentro".
-
-DATOS DEL PROYECTO
-- Carpeta abierta en Codex: [RUTA DEL PROYECTO]
-- Versión de la aplicación: [VERSIÓN]
-- Sistema operativo: [WINDOWS 10/11]
-- Esta es una copia pública: no debe contener mis coches, VIN, matrículas, claves, sesiones ni rutas personales.
-
-IDENTIDAD DEL VEHÍCULO
-- Marca: [MARCA]
-- Modelo: [MODELO]
-- Generación/plataforma: [GENERACIÓN]
-- Año/mes de fabricación: [AÑO Y MES O DESCONOCIDO]
-- Mercado: [EU/US/LATAM/OTRO]
-- Variante/acabado: [VARIANTE]
-- Tipo de propulsión: [GASOLINA/DIÉSEL/HÍBRIDO/PHEV/EV]
-- Motor y cilindrada: [MOTOR]
-- Código exacto de motor: [CÓDIGO O DESCONOCIDO]
-- Potencia: [KW/CV]
-- Tipo de inyección: [TIPO O DESCONOCIDO]
-- Norma de emisiones: [NORMA O DESCONOCIDO]
-- Turbo/EGR/DPF/GPF/SCR: [EQUIPAMIENTO CONFIRMADO O DESCONOCIDO]
-- ECU/familia: [ECU O DESCONOCIDO]
-- Referencia de ECU/calibración/software: [REFERENCIAS O DESCONOCIDO]
-
-CONEXIÓN Y EVIDENCIA DISPONIBLE
-- Adaptador y firmware: [MODELO/FIRMWARE]
-- Tipo de conexión: [USB/BLUETOOTH]
-- Puerto: [COM O DESCONOCIDO]
-- Protocolo detectado: [PROTOCOLO O DESCONOCIDO]
-- Herramienta de referencia utilizada: [HERRAMIENTA O NINGUNA]
-- Datos que ya se reciben: [LISTA CON UNIDADES]
-- Datos que faltan o quedan en "--": [LISTA]
-- Síntomas/DTC: [DETALLE O NINGUNO]
-- Capturas, sesiones, logs o transcripciones adjuntas: [LISTA DE ARCHIVOS]
-
-OBJETIVO
-Quiero obtener la máxima cobertura diagnóstica realista: identidad de ECU, RPM, velocidad, carga, temperaturas, admisión, MAF/MAP, turbo solicitado/real, EGR, combustible e inyección, consumo instantáneo y medio de trayecto, correcciones relevantes, sistema eléctrico, escape, DPF/GPF/SCR, monitores, DTC y Freeze Frame. Esta lista es un objetivo, no una autorización para inventar señales: implementa y muestra solo lo que esta variante ofrezca y pueda verificarse.
-
-REGLAS DE SEGURIDAD OBLIGATORIAS
-1. Trabaja exclusivamente en modo de solo lectura. No implementes ni ejecutes escritura de ECU, codificación, adaptación, borrado de DTC, actuadores, rutinas, desbloqueo de seguridad, flasheo ni comandos potencialmente destructivos.
-2. No pruebes comandos sobre el coche hasta haber auditado el código y presentado la lista exacta de peticiones de solo lectura.
-3. No inventes PIDs, DID, bloques, fórmulas, offsets, escalas, unidades, rangos OEM ni compatibilidad. Una fuente de otro motor o firmware no es evidencia suficiente.
-4. Distingue siempre SAE/ISO OBD-II estándar de UDS, KWP2000, TP2.0 u otros protocolos propietarios. Verifica direccionamiento, sesión y variante de ECU.
-5. Prioriza documentación primaria: manuales del fabricante, normas oficiales, documentación del proveedor de ECU/adaptador y fuentes técnicas reproducibles. Cita cada fuente y marca claramente cualquier inferencia.
-6. Nunca uses valores simulados como fallback en producción. Nunca conviertas un timeout, cero artificial o ausencia de respuesta en un dato real.
-7. Mantén estados separados: ofrecido por ECU, respuesta verificada, pendiente de mapear, no soportado, error temporal y dato obsoleto.
-8. Oculta en la interfaz las tarjetas no aplicables o definitivamente no soportadas. Mantén visibles como pendientes solo las que tengan una vía concreta de identificación.
-9. Protege la privacidad: no leas ni publiques VIN completo, matrícula, ubicación, claves, base de datos personal ni rutas del usuario.
-10. Usa un MICOCHE_HOME temporal para pruebas y no modifiques los datos reales del usuario.
-
-FORMA DE TRABAJO
-A. Inspecciona primero todo el repositorio relevante: arquitectura, adaptadores, transportes, descubrimiento de capacidades, perfiles existentes, especificaciones, etiquetas, interfaz, informes y pruebas. No empieces creando archivos aislados sin entender el flujo completo.
-B. Comprueba el estado actual ejecutando las pruebas y la compilación. Informa de cualquier fallo previo antes de atribuirlo al nuevo vehículo.
-C. Investiga la identidad exacta del vehículo y explica qué datos faltan para distinguir variantes. Si falta un dato bloqueante, prepara una identificación segura o formula una pregunta concreta.
-D. Crea una matriz de cobertura propuesta con estas columnas: señal, prioridad, fuente/protocolo, identificador, fórmula, unidad, aplicabilidad, evidencia, estado y método de validación.
-E. Implementa por capas y reutiliza la arquitectura existente. No hardcodees el UUID de mi coche ni preinsertes vehículos en la base de datos pública.
-F. Para señales propietarias, conserva evidencia bruta suficiente para depurar, pero anonimizada. Valida longitud, bytes de estado, valores no disponibles, signo, endianess, offset, factor y unidad.
-G. Valida coherencia física y temporal: rangos, continuidad, reacción a carga/RPM, comparación objetivo-real y contraste con una herramienta fiable cuando exista.
-H. Evalúa la carga del bus: latencia, frecuencia de muestreo, porcentaje de respuestas válidas, timeouts y agrupación de peticiones. Prioriza calidad sobre cantidad.
-I. Para consumo, diferencia caudal medido y cálculo derivado. El consumo medio debe integrar combustible/distancia con criterios de validez y cobertura; no promedies directamente valores instantáneos inestables.
-J. Para DPF/GPF/SCR, no confundas readiness con carga de hollín ni regeneración. Implementa cada magnitud solo si la ECU y la evidencia la sostienen.
-K. Añade pruebas unitarias del decodificador, transporte, estados de capacidad, selección de tarjetas, cálculos derivados y resolución de ficha. Incluye respuestas normales, no disponibles, truncadas y erróneas.
-L. Ejecuta al final la suite Python completa, npm build y, si el entorno lo permite, el empaquetado y smoke test de Windows.
-
-CICLO CON EL COCHE REAL
-Cuando necesites datos reales, detén el desarrollo y entrégame un protocolo de prueba breve y seguro que indique:
-- contacto o motor encendido;
-- motor frío/caliente;
-- vehículo detenido o prueba en carretera;
-- duración aproximada;
-- acciones exactas y límites de RPM/carga;
-- señales objetivo;
-- archivo, captura o transcripción que debo devolverte;
-- criterio para abortar por tensión, latencia o pérdida de respuestas.
-No continúes suponiendo resultados mientras esperas esa evidencia.
-
-ENTREGABLES FINALES
-1. Resumen de la identidad confirmada y sus fuentes.
-2. Cambios implementados, con archivos y motivo.
-3. Tabla de cobertura final: medida, calculada, pendiente, no soportada y oculta.
-4. Lista de fórmulas/unidades y evidencia de cada señal propietaria.
-5. Resultados de pruebas, compilación y smoke test.
-6. Limitaciones que siguen abiertas y siguiente captura concreta recomendada.
-7. Confirmación expresa de que no se añadieron comandos de escritura ni datos personales.
-
-Empieza ahora por la auditoría del repositorio y la matriz de compatibilidad. Haz cambios directos cuando estén respaldados por el código y la evidencia disponible; si el coche real es imprescindible, prepara el protocolo de captura y espera mis resultados.
-```
-
-## 9. Qué debe devolver el usuario después de cada prueba
-
-Para que el agente pueda avanzar, responde con:
-
-- captura del banner de conexión;
-- captura de cada categoría de instrumentos;
-- identificador de la sesión;
-- duración y condiciones de la prueba;
-- si el motor estaba frío o caliente;
-- qué acciones se realizaron;
-- mensajes de error exactos;
-- herramienta de contraste y valores observados;
-- archivo de telemetría o log solicitado, anonimizado.
-
-Evita resumir un error como “no funciona”. El texto exacto, el momento y las condiciones permiten distinguir incompatibilidad, timeout, saturación del bus, fórmula incorrecta o una señal que la ECU simplemente no ofrece.
-
-## 10. Resultado esperado
-
-Una buena integración no es la que muestra más relojes, sino la que puede explicar de dónde sale cada valor, cuándo es válido y qué limitaciones tiene. El objetivo final es que una sesión con muchas señales coherentes permita analizar relaciones —por ejemplo, aire, turbo, EGR, inyección y consumo— sin confundir ausencia de datos con ausencia de avería.
+Una buena integración no es la que muestra más relojes: es la que puede demostrar de dónde sale cada valor y cuándo merece confianza.
