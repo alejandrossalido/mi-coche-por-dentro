@@ -8,7 +8,7 @@ Es una aplicación de **solo lectura**: no codifica, no reprograma y no modifica
 
 | Quiero… | Documento |
 |---|---|
-| Instalar y abrir la aplicación | **[Instalación](docs/INSTALACION.md)** |
+| Instalarla y crear un acceso directo en el escritorio | **[Instalación](docs/INSTALACION.md)** |
 | Añadir o integrar mi coche | **[Importar un vehículo](docs/IMPORTAR_VEHICULO.md)** |
 | Saber todo lo que ofrece | **[Qué hace la aplicación](docs/QUE_HACE_LA_APLICACION.md)** |
 

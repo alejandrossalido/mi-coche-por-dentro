@@ -50,6 +50,13 @@ try {
     if (-not (Test-Path -LiteralPath $Executable)) {
         throw "PyInstaller no creó el ejecutable esperado: $Executable"
     }
+
+    $PackageRoot = Split-Path -Parent $Executable
+    $PackageScripts = Join-Path $PackageRoot "scripts"
+    New-Item -ItemType Directory -Path $PackageScripts -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $ProjectRoot "Crear_Acceso_Directo.bat") -Destination $PackageRoot -Force
+    Copy-Item -LiteralPath (Join-Path $ProjectRoot "scripts\create_desktop_shortcut.ps1") -Destination $PackageScripts -Force
+
     Write-Host "Paquete creado: $(Split-Path -Parent $Executable)"
 }
 finally {

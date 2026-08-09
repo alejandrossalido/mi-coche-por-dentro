@@ -28,6 +28,10 @@ dist\MiCochePorDentro\
 Debe copiarse la carpeta completa. El ejecutable es
 `dist\MiCochePorDentro\MiCochePorDentro.exe`.
 
+El proceso de compilación también incluye `Crear_Acceso_Directo.bat` y su
+script auxiliar. El usuario puede ejecutarlo desde la carpeta descomprimida
+para crear en el escritorio un acceso directo al ejecutable real.
+
 Los datos modificables no se guardan en el paquete. Se conservan entre
 actualizaciones en:
 
