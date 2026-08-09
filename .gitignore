@@ -1,0 +1,61 @@
+# Entornos virtuales
+.venv/
+env/
+venv/
+ENV/
+
+# Python cache y bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+build-*/
+dist-*/
+
+# Datos locales y SQLite (no subir VIN ni telemetría real)
+*.sqlite
+*.sqlite3
+*.db
+*.parquet
+data/vehicles/*
+!data/vehicles/.gitkeep
+data/telemetry/*
+!data/telemetry/.gitkeep
+sample_data/*.parquet
+
+# Variables de entorno secretas
+.env
+.env.*
+!.env.example
+.env.local
+
+# Ejecutables, empaquetados y registros generados
+*.exe
+*.msi
+*.zip
+*.log
+*.stdout
+*.stderr
+
+# Cobertura y herramientas
+.coverage
+coverage.xml
+htmlcov/
+
+# Datos persistentes de la aplicación
+MiCochePorDentro/
+
+# IDE y Sistema Operativo
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

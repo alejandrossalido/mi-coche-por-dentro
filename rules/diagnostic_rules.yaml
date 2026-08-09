@@ -1,0 +1,62 @@
+# Reglas Diagnósticas Deterministas para 'Mi Coche por Dentro'
+# Conforme a la Sección 22 de especificación_maestra_del_proyecto.md
+
+- id: coolant_low_stable_temperature
+  version: 1
+  finding_type: COOLING_SYSTEM_ANOMALY
+  severity: warning
+  applies_to:
+    fuel_types: [gasoline, diesel]
+  requirements:
+    - COOLANT_TEMP
+  conditions:
+    min_duration_min: 10.0
+    max_coolant_temp_c: 70.0
+  message: "La temperatura del refrigerante se mantuvo por debajo de 70°C tras más de 10 minutos de circulación. Posible termostato abierto o defectuoso."
+  hypotheses:
+    - termostato atascado en posición abierta
+    - sensor de temperatura (ECT) descalibrado
+    - carga de motor insuficiente o condiciones ambientales extremas
+  recommended_checks:
+    - comparar la temperatura del manguito superior del radiador manualmente
+    - verificar la resistencia eléctrica del sensor ECT
+
+- id: idle_instability
+  version: 1
+  finding_type: IDLE_STABILITY_ANOMALY
+  severity: warning
+  applies_to:
+    fuel_types: [gasoline, diesel]
+  requirements:
+    - RPM
+    - SPEED
+  conditions:
+    max_speed_kmh: 0.0
+    min_rpm_std: 80.0
+  message: "Inestabilidad de ralentí detectada (variación excesiva de RPM en parado)."
+  hypotheses:
+    - cuerpo de mariposa sucio o válvula IAC descalibrada
+    - fallos puntuales de encendido (misfire)
+    - oscilación de ajustes de combustible (fuel trims)
+  recommended_checks:
+    - inspeccionar la mariposa de admisión
+    - comprobar bujías y bobinas de encendido
+
+- id: fuel_trim_lean
+  version: 1
+  finding_type: FUEL_TRIM_ANOMALY
+  severity: warning
+  applies_to:
+    fuel_types: [gasoline]
+  requirements:
+    - LONG_FUEL_TRIM_1
+  conditions:
+    min_ltft_percent: 12.0
+  message: "Ajuste de combustible a largo plazo elevadamente positivo (+12%). Compensación por mezcla pobre."
+  hypotheses:
+    - toma de aire pirata / fuga de vacío en admisión
+    - sensor MAF sucio o descalibrado
+    - baja presión de combustible
+  recommended_checks:
+    - inspeccionar tubos de vacío con máquina de humo o limpiacontactos
+    - limpiar el filamento del sensor MAF
