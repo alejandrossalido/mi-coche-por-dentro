@@ -39,7 +39,7 @@ DATOS OPCIONALES QUE YA CONOZCO:
 OBJETIVO FINAL
 Deja el proyecto tan completo, seguro y probado como permitan el repositorio, la documentación legítimamente accesible y la evidencia disponible. Busca la máxima cobertura REAL y ÚTIL de esta variante: identidad, motor, temperaturas, admisión, MAF/MAP, turbo, EGR, combustible, inyección, consumo, sistema eléctrico, escape, emisiones, DPF/GPF/SCR, DTC, Freeze Frame, readiness, Modo 06 y cualquier otra señal que la mecánica y la ECU justifiquen.
 
-La lista es un objetivo de investigación, no una orden de mostrar todas esas métricas. Una señal inexistente, no aplicable, inaccesible o no demostrada debe quedar clasificada y no aparecer como un reloj vacío o un dato real.
+La lista anterior es solo el mínimo. Investiga de forma exhaustiva TODAS las métricas que la variante, sus ECUs y el hardware puedan ofrecer, aunque el usuario no las haya mencionado y aunque su utilidad parezca secundaria. No selecciones únicamente las métricas “interesantes”: cualquier señal documentada o razonablemente candidata debe entrar en el catálogo técnico con identificador, origen y estado. Intenta implementar y verificar cada una. Si no puedes obtenerla, no la elimines silenciosamente: clasifícala como pendiente, sin decodificar, condicional, no disponible, no aplicable o inaccesible con este hardware. El inventario puede mostrarla vacía con ese estado; el cuadro de instrumentos nunca debe presentarla como una medición real sin evidencia.
 
 MODO DE EJECUCIÓN AUTÓNOMA
 - No termines después de proponer un plan, listar fuentes o crear una matriz. Continúa en esta misma tarea con la investigación, los cambios, las pruebas, el build y el informe final siempre que puedas hacerlo sin el coche.
@@ -130,6 +130,8 @@ Antes de prometer señales propietarias determina:
 Si el adaptador no puede acceder físicamente a la red, clasifica esas señales como INACCESIBLES CON ESTE HARDWARE. No intentes recuperarlas mediante comandos improvisados. Mantén OBD genérico operativo si falla la capa propietaria.
 
 FASE 5 — CREA EL CATÁLOGO Y EL CONTRATO DE EVIDENCIA
+Crea primero el inventario exhaustivo y después decide qué puede medirse. Recorre sistemáticamente todos los PIDs estándar aplicables, todos los bloques/DID/local identifiers documentados para cada ECU accesible y todos los campos de sus respuestas. No cierres el catálogo al alcanzar una cobertura “suficiente” y no descartes una métrica solo porque no se use aún en una regla diagnóstica.
+
 Crea como artefacto de trabajo una matriz por señal con:
 - nombre canónico estable y etiqueta comprensible;
 - sistema, utilidad diagnóstica y prioridad;
@@ -197,7 +199,8 @@ Distingue al menos: no solicitada, timeout, respuesta negativa, marcador vacío,
 
 INTERFAZ, INFORME E IA
 - Genera las tarjetas desde capacidades reales; no diseñes primero una pantalla fija y fuerces después los datos.
-- Muestra una señal solo si está verificada o si existe una fase de identificación claramente explicada.
+- Mantén dos niveles distintos: el cuadro de instrumentos muestra mediciones verificadas o una identificación claramente explicada; el inventario técnico muestra TODAS las métricas catalogadas, incluidas pendientes, condicionales, no disponibles, no aplicables e inaccesibles.
+- Registra cada familia nueva mediante un proveedor del catálogo general (`collector/metric_catalog.py`) para que ninguna candidata dependa de que el agente recuerde crear una tarjeta manual.
 - Diferencia disponible, sin lectura reciente, condicional, pendiente de decodificar, no ofrecida, no aplicable y error de comunicación.
 - Mantén todas las traducciones de español, inglés, italiano y alemán.
 - El informe debe ser comprensible para no mecánicos y separar hechos, cálculos, hipótesis, calidad y limitaciones.
@@ -259,7 +262,7 @@ La integración solo puede considerarse completa cuando:
 - una base vacía permite crear el coche sin datos precargados;
 - OBD genérico sigue funcionando si falla la capa propietaria;
 - cada señal visible tiene ECU, identificador, fórmula, unidad, estado y evidencia;
-- las no aplicables/no soportadas se ocultan y las desconocidas conservan evidencia;
+- las no aplicables/no soportadas se excluyen de los relojes en directo, pero permanecen visibles y explicadas en el inventario completo; las desconocidas conservan evidencia;
 - el planificador mantiene una captura estable y reporta cobertura real;
 - cálculos, informe e IA distinguen procedencia y limitaciones;
 - pasan pruebas, build y smoke test;

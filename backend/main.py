@@ -25,6 +25,7 @@ from database.parquet_store import TelemetryStore
 from database.exporter import VehicleBackupExporter
 from collector.adapter_manager import AdapterManager, AdapterState
 from collector.pid_discovery import PIDDiscovery
+from collector.metric_catalog import metric_catalog_for_vehicle
 from collector.poller import TelemetryPoller
 from collector.capture_profiles import CaptureProfileManager
 from collector.vag_bkp_catalog import DOCUMENTED_GROUPS, category_for_group
@@ -565,6 +566,32 @@ def get_manufacturer_probe(vehicle_id: str):
         "applicable": _is_vag_vehicle(vehicle),
         "last_probe": cached,
         "capabilities": capabilities,
+    }
+
+
+@app.get("/api/vehicles/{vehicle_id}/metric-catalog")
+def get_vehicle_metric_catalog(vehicle_id: str):
+    """Devuelve todos los candidatos conocidos, también los aún no resueltos."""
+    vehicle = db.get_vehicle(vehicle_id)
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehículo no encontrado.")
+    metrics = metric_catalog_for_vehicle(
+        vehicle,
+        db.list_vehicle_capabilities(vehicle_id),
+    )
+    confirmed = sum(bool(item.get("supported_verified")) for item in metrics)
+    pending_statuses = {"not_tested", "mapping_required", "undecoded", "conditional"}
+    pending = sum(str(item.get("status", "")) in pending_statuses for item in metrics)
+    unavailable = len(metrics) - confirmed - pending
+    return {
+        "vehicle_id": vehicle_id,
+        "metrics": metrics,
+        "summary": {
+            "catalogued": len(metrics),
+            "confirmed": confirmed,
+            "pending": pending,
+            "unavailable": max(0, unavailable),
+        },
     }
 
 

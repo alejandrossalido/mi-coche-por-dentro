@@ -2,7 +2,7 @@
 
 Esta guía permite ampliar **Mi Coche por Dentro** para un coche nuevo con ayuda de Codex u otro agente de programación con acceso al repositorio, Internet y documentos técnicos.
 
-> **Resultado realista:** el agente puede investigar e implementar gran parte de la compatibilidad, pero ningún prompt garantiza todos los datos de cualquier coche. Los parámetros propietarios dependen del motor, la ECU y su software; la integración solo queda confirmada después de probarla con el vehículo real.
+> **Resultado realista:** el agente debe investigar y catalogar todas las métricas posibles, pero ningún prompt garantiza que la ECU permita leerlas todas. Los parámetros propietarios dependen del motor, la ECU y su software; cada candidata conserva su estado y la integración solo queda confirmada después de probarla con el vehículo real.
 
 ## 1. Dos niveles de incorporación
 

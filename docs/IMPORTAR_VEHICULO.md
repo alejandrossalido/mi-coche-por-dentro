@@ -16,6 +16,8 @@ Algunos datos —inyección, turbo, EGR, DPF, regeneraciones o métricas propias
 4. adaptar el proyecto y añadir pruebas;
 5. confirmar los resultados con una captura real del coche.
 
+El agente debe intentar catalogar **todas** las métricas posibles del vehículo, no solo las que considere más interesantes. Las que consiga demostrar aparecerán como confirmadas; las demás permanecerán en el inventario como pendientes, condicionales, no disponibles, no aplicables o inaccesibles. Que una métrica no pueda leerse no bloquea la importación y nunca se sustituye por un valor inventado.
+
 Utiliza un agente potente con acceso al repositorio, Internet y lectura de PDF; por ejemplo, **Codex con GPT-5.6 Sol**, o una herramienta equivalente. No basta con un chat que no pueda inspeccionar y modificar el proyecto.
 
 ### Qué debe indicar el usuario
@@ -44,4 +46,4 @@ El prompt le indica cómo buscar documentación, analizar PDF, trabajar en modo 
 
 ## Importante
 
-No se puede garantizar que cualquier ECU entregue todas las señales. La integración correcta muestra únicamente datos comprobados, oculta lo que el coche no ofrece y diferencia claramente una medición real de un cálculo.
+No se puede garantizar que cualquier ECU entregue todas las señales. La integración correcta muestra únicamente datos comprobados en los relojes de diagnóstico, pero conserva en **Garaje → Todas las métricas investigadas** el catálogo completo y el motivo exacto de cada ausencia.

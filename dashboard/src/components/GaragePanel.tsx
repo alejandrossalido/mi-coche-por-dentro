@@ -21,6 +21,7 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
   const [baseline, setBaseline] = useState<any>(null);
   const [compatibility, setCompatibility] = useState<any>(null);
   const [manufacturerData, setManufacturerData] = useState<any>(null);
+  const [metricCatalog, setMetricCatalog] = useState<any>(null);
   const [inventoryRunning, setInventoryRunning] = useState(false);
   const [inventoryError, setInventoryError] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('Todas');
@@ -28,16 +29,18 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
   const fetchRepairs = async () => {
     if (!vehicleId) return;
     try {
-      const [repairsResponse, baselineResponse, compatibilityResponse, manufacturerResponse] = await Promise.all([
+      const [repairsResponse, baselineResponse, compatibilityResponse, manufacturerResponse, metricCatalogResponse] = await Promise.all([
         fetch(`/api/vehicles/${vehicleId}/repairs`),
         fetch(`/api/vehicles/${vehicleId}/baseline`),
         fetch('/api/adapter/compatibility'),
-        fetch(`/api/vehicles/${vehicleId}/manufacturer-probe`, { cache: 'no-store' })
+        fetch(`/api/vehicles/${vehicleId}/manufacturer-probe`, { cache: 'no-store' }),
+        fetch(`/api/vehicles/${vehicleId}/metric-catalog`, { cache: 'no-store' })
       ]);
       if (repairsResponse.ok) setRepairs(await repairsResponse.json());
       if (baselineResponse.ok) setBaseline(await baselineResponse.json());
       if (compatibilityResponse.ok) setCompatibility(await compatibilityResponse.json());
       if (manufacturerResponse.ok) setManufacturerData(await manufacturerResponse.json());
+      if (metricCatalogResponse.ok) setMetricCatalog(await metricCatalogResponse.json());
     } catch (e) {
       console.error(e);
     }
@@ -57,6 +60,8 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
         last_probe: payload,
         capabilities: payload.live_signals || []
       });
+      const catalogResponse = await fetch(`/api/vehicles/${vehicleId}/metric-catalog`, { cache: 'no-store' });
+      if (catalogResponse.ok) setMetricCatalog(await catalogResponse.json());
     } catch (error) {
       setInventoryError(error instanceof Error ? error.message : 'No se pudo completar el inventario.');
     } finally {
@@ -64,8 +69,9 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
     }
   };
 
-  const capabilities = manufacturerData?.capabilities || manufacturerData?.last_probe?.live_signals || [];
+  const capabilities = metricCatalog?.metrics || manufacturerData?.capabilities || manufacturerData?.last_probe?.live_signals || [];
   const summary = manufacturerData?.last_probe || {};
+  const catalogSummary = metricCatalog?.summary || {};
   const categories = ['Todas', ...Array.from(new Set(capabilities.map((item: any) => item.category).filter(Boolean))) as string[]];
   const visibleCapabilities = capabilities
     .filter((item: any) => categoryFilter === 'Todas' || item.category === categoryFilter)
@@ -74,6 +80,18 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
       const fuelB = b.category === 'Combustible, mezcla y emisiones' ? 0 : 1;
       return fuelA - fuelB || Number(b.supported_verified) - Number(a.supported_verified) || Number(a.group_number || 999) - Number(b.group_number || 999);
     });
+  const pendingMetricStatuses = new Set(['not_tested', 'mapping_required', 'undecoded', 'conditional']);
+  const metricStatus = (item: any) => {
+    if (item.supported_verified) {
+      return `Confirmada${item.sample_value !== null && item.sample_value !== undefined ? ` · ${item.sample_value} ${item.unit || ''}` : ''}`;
+    }
+    if (item.status === 'undecoded' || item.status === 'mapping_required') return 'Pendiente de decodificar';
+    if (item.status === 'conditional') return 'Pendiente de condición';
+    if (item.status === 'not_applicable') return 'No aplicable';
+    if (item.status === 'inaccessible_hardware') return 'Hardware no compatible';
+    if (pendingMetricStatuses.has(item.status)) return 'Pendiente';
+    return 'No disponible';
+  };
 
   useEffect(() => {
     fetchRepairs();
@@ -174,18 +192,18 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
         </article>
       </div>
 
-      {manufacturerData?.applicable && (
+      {capabilities.length > 0 && (
         <section style={{ backgroundColor: '#0b1220', border: '1px solid #334155', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div>
               <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: '#f8fafc' }}>
-                <ListChecks size={18} color="#22d3ee" /> Inventario completo de la ECU Volkswagen
+                <ListChecks size={18} color="#22d3ee" /> Todas las métricas investigadas para este vehículo
               </h4>
               <p style={{ color: '#cbd5e1', margin: '0.5rem 0 0', maxWidth: '780px' }}>
-                Comprueba uno por uno los bloques documentados y conserva la respuesta bruta. Una métrica solo figura como confirmada si este coche la ha devuelto realmente.
+                Incluye los PIDs estándar y todos los candidatos específicos añadidos por el agente. Ninguna métrica posible debe omitirse: si todavía no puede obtenerse, queda claramente marcada como pendiente o no disponible.
               </p>
             </div>
-            <button
+            {manufacturerData?.applicable && <button
               type="button"
               onClick={runFullInventory}
               disabled={inventoryRunning || !compatibility?.connected}
@@ -193,21 +211,22 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
             >
               <RefreshCw size={15} style={{ marginRight: '0.4rem', verticalAlign: 'text-bottom' }} />
               {inventoryRunning ? 'Leyendo todos los bloques…' : 'Repetir inventario completo'}
-            </button>
+            </button>}
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', margin: '1rem 0' }}>
-            <span className="garage-status garage-status--ready">{summary.verified_live_signal_count || 0} métricas confirmadas</span>
-            <span className="garage-status garage-status--learning">{summary.responding_group_count || 0} / {summary.documented_group_count || summary.tested_group_count || 69} bloques responden</span>
-            <span className="garage-status garage-status--learning">Cobertura real: {summary.coverage_percent ?? 0}%</span>
+            <span className="garage-status garage-status--ready">{catalogSummary.confirmed || 0} métricas confirmadas</span>
+            <span className="garage-status garage-status--learning">{catalogSummary.pending || 0} pendientes de comprobar o decodificar</span>
+            <span className="garage-status garage-status--learning">{catalogSummary.catalogued || capabilities.length} métricas catalogadas</span>
+            {manufacturerData?.applicable && <span className="garage-status garage-status--learning">{summary.responding_group_count || 0} / {summary.documented_group_count || summary.tested_group_count || 0} bloques responden</span>}
           </div>
           <p style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
-            “No disponible” significa que la ECU no devolvió ese campo o que todavía no se ha comprobado; no se sustituye por un valor calculado o simulado.
+            “Pendiente” significa que el agente la identificó como posible, pero falta comprobarla o terminar su decodificación. “No disponible” significa que la ECU la rechazó, no equipa el sensor o no es accesible con el hardware actual. Nunca se inventa un valor.
           </p>
           {inventoryError && <p style={{ color: '#fb7185', fontWeight: 700 }}>{inventoryError}</p>}
 
           {capabilities.length > 0 && (
-            <details>
+            <details open>
               <summary style={{ cursor: 'pointer', color: '#22d3ee', fontWeight: 800 }}>Ver las {capabilities.length} métricas catalogadas</summary>
               <div style={{ marginTop: '0.8rem' }}>
                 <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} style={{ background: '#111827', color: '#f8fafc', border: '1px solid #475569', borderRadius: '6px', padding: '0.45rem' }}>
@@ -219,8 +238,8 @@ export const GaragePanel: React.FC<GaragePanelProps> = ({ vehicleId, vehicleName
                       <code style={{ color: '#94a3b8' }}>{item.pid || '—'}</code>
                       <span style={{ color: '#e2e8f0' }}>{item.label || item.pid_name}</span>
                       <span style={{ color: '#94a3b8' }}>{item.category || 'Sin clasificar'}</span>
-                      <strong style={{ color: item.supported_verified ? '#a3e635' : item.status === 'not_tested' ? '#fbbf24' : '#94a3b8' }}>
-                        {item.supported_verified ? `Confirmada${item.sample_value !== null && item.sample_value !== undefined ? ` · ${item.sample_value} ${item.unit || ''}` : ''}` : item.status === 'not_tested' ? 'Pendiente' : 'No disponible'}
+                      <strong style={{ color: item.supported_verified ? '#a3e635' : pendingMetricStatuses.has(item.status) ? '#fbbf24' : '#94a3b8' }}>
+                        {metricStatus(item)}
                       </strong>
                     </div>
                   ))}
