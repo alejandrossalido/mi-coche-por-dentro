@@ -171,7 +171,34 @@ No aplicar PIDs de motor térmico. Muchos EV necesitan DoIP, CAN pasivo, un arn�
 - Pasan las pruebas Python, la compilación de la interfaz y la prueba del ejecutable.
 - Existe una tabla final de cobertura: recibida, calculada, pendiente y no disponible.
 
-## 7. Prompt maestro para integrar un vehículo con Codex
+## 7. Prompt rápido para empezar
+
+Si solo quieres empezar sin rellenar todos los campos, copia este bloque y cambia la línea `COCHE EXACTO`. Después adjunta capturas de la app, logs, sesiones OBD o documentación técnica que tengas.
+
+```text
+Quiero que integres y maximices de forma segura la compatibilidad de este coche en el proyecto local "Mi Coche por Dentro".
+
+COCHE EXACTO:
+[MARCA, MODELO, GENERACIÓN, AÑO, MOTOR, CÓDIGO DE MOTOR, MERCADO Y ECU SI SE CONOCE]
+
+OBJETIVO:
+Investiga la documentación técnica disponible, protocolos OBD-II/UDS/KWP2000/CAN aplicables, PIDs estándar, identificadores propietarios, bloques de medición, fórmulas, unidades y limitaciones de esta variante concreta. Quiero obtener la máxima cantidad de datos reales y útiles posible: motor, temperaturas, admisión, turbo, EGR, combustible, inyección, consumo instantáneo y medio, sistema eléctrico, emisiones, DPF/GPF/SCR, DTC, Freeze Frame, monitores y Modo 06 cuando existan.
+
+REGLAS:
+- Trabaja solo en lectura. No implementes escrituras, codificación, adaptación, borrado de errores, actuadores, rutinas ni flasheo.
+- No inventes PIDs, fórmulas ni compatibilidad. Si algo no está probado para esta ECU, márcalo como pendiente o no soportado.
+- Separa datos medidos por ECU, calculados, inferidos, simulados y ausentes.
+- Muestra en la interfaz solo señales reales, verificadas o con una ruta clara de validación. Oculta lo no soportado.
+- Protege privacidad: no uses VIN completo, matrícula, ubicación, claves ni datos personales.
+- Antes de pedir pruebas con el coche real, dime exactamente qué captura hacer, cuánto debe durar, qué condiciones usar y cuándo abortar.
+
+FORMA DE TRABAJO:
+Primero audita el repositorio completo. Después crea una matriz de compatibilidad con señal, protocolo/fuente, PID/DID/bloque, fórmula, unidad, evidencia, estado y método de validación. Implementa por capas, añade pruebas y ejecuta la suite antes de terminar. Si falta evidencia real, prepara un protocolo de captura seguro en vez de suponer resultados.
+```
+
+Este prompt está pensado para usarse con un modelo de programación potente, con acceso al repositorio y capacidad de leer documentación técnica. Cuanto más exacto sea el coche, mejor: no es lo mismo `Passat B6 2.0 TDI` que `Volkswagen Passat B6 2.0 TDI BKP, inyector-bomba, Europa, ECU EDC16`.
+
+## 8. Prompt maestro para integrar un vehículo con Codex
 
 Copia el bloque completo, sustituye los campos entre corchetes y adjunta las capturas o archivos disponibles. Si un dato no se conoce, escribe `DESCONOCIDO`.
 
@@ -265,7 +292,7 @@ ENTREGABLES FINALES
 Empieza ahora por la auditoría del repositorio y la matriz de compatibilidad. Haz cambios directos cuando estén respaldados por el código y la evidencia disponible; si el coche real es imprescindible, prepara el protocolo de captura y espera mis resultados.
 ```
 
-## 8. Qué debe devolver el usuario después de cada prueba
+## 9. Qué debe devolver el usuario después de cada prueba
 
 Para que el agente pueda avanzar, responde con:
 
@@ -281,6 +308,6 @@ Para que el agente pueda avanzar, responde con:
 
 Evita resumir un error como “no funciona”. El texto exacto, el momento y las condiciones permiten distinguir incompatibilidad, timeout, saturación del bus, fórmula incorrecta o una señal que la ECU simplemente no ofrece.
 
-## 9. Resultado esperado
+## 10. Resultado esperado
 
 Una buena integración no es la que muestra más relojes, sino la que puede explicar de dónde sale cada valor, cuándo es válido y qué limitaciones tiene. El objetivo final es que una sesión con muchas señales coherentes permita analizar relaciones —por ejemplo, aire, turbo, EGR, inyección y consumo— sin confundir ausencia de datos con ausencia de avería.
