@@ -11,7 +11,8 @@ def test_every_vehicle_starts_with_the_complete_standard_pid_catalog():
     rows = metric_catalog_for_vehicle({"make": "Example", "engine_code": "X1"})
     names = {row["pid_name"] for row in rows}
 
-    assert {row[0] for row in STANDARD_PIDS} == names
+    assert {row[0] for row in STANDARD_PIDS}.issubset(names)
+    assert len(names) >= 90
     assert all(row["status"] == "not_tested" for row in rows)
 
 

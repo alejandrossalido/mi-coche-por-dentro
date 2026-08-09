@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Iterable, List
 
-from collector.pid_discovery import STANDARD_PIDS
+from collector.pid_discovery import STANDARD_PIDS, obd
 from collector.vag_bkp_catalog import category_for_group
 from collector.vag_kwp2000 import ALL_KWP_SIGNALS
 
@@ -30,8 +30,62 @@ def _standard_category(pid_name: str) -> str:
     return "Combustible, mezcla y emisiones"
 
 
+def _standard_unit(pid_name: str, description: str) -> str:
+    known = {name: unit for name, _, _, _, unit in STANDARD_PIDS}
+    if pid_name in known:
+        return known[pid_name]
+    text = f"{pid_name} {description}".upper()
+    if "TEMP" in text:
+        return "°C"
+    if "PRESSURE" in text:
+        return "kPa"
+    if "DISTANCE" in text:
+        return "km"
+    if "TIME" in text or "RUN_TIME" in text:
+        return "s"
+    if "RPM" in text:
+        return "rpm"
+    if "SPEED" in text:
+        return "km/h"
+    if "VOLTAGE" in text:
+        return "V"
+    if "CURRENT" in text:
+        return "mA"
+    if "MAF" in text or "AIR FLOW" in text:
+        return "g/s"
+    if "ADVANCE" in text or "TIMING" in text:
+        return "°"
+    if any(token in text for token in ("TRIM", "POSITION", "LOAD", "PERCENT", "PURGE", "FUEL LEVEL", "BATTERY")):
+        return "%"
+    if "WARM-UP" in text or "COUNT" in text:
+        return "count"
+    return "state"
+
+
 def _standard_catalog(_: Dict[str, Any]) -> Iterable[MetricRow]:
-    for name, mode, pid, label, unit in STANDARD_PIDS:
+    rows: Dict[str, tuple[str, str, str, str]] = {
+        name: (mode, pid, label, unit)
+        for name, mode, pid, label, unit in STANDARD_PIDS
+    }
+    # python-OBD 0.7.3 contiene la tabla completa que esta aplicación puede
+    # consultar y decodificar de Mode 01. Se cataloga entera; STANDARD_PIDS
+    # sigue siendo el subconjunto ligero usado por la importación manual.
+    if obd is not None:
+        for command in obd.commands[1]:
+            if command is None:
+                continue
+            request = bytes(command.command).decode("ascii", errors="ignore")
+            if len(request) < 4:
+                continue
+            rows[command.name] = (
+                request[:2],
+                request[2:4],
+                command.desc,
+                _standard_unit(command.name, command.desc),
+            )
+    # La tensión del adaptador es un dato AT adicional y no forma parte de
+    # Mode 01, pero sí puede obtenerse con el hardware conectado.
+    for name, (mode, pid, label, unit) in rows.items():
         yield {
             "pid_name": name,
             "label": label,

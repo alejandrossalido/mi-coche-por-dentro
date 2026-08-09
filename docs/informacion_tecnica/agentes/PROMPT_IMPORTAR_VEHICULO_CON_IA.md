@@ -41,6 +41,8 @@ Deja el proyecto tan completo, seguro y probado como permitan el repositorio, la
 
 La lista anterior es solo el mínimo. Investiga de forma exhaustiva TODAS las métricas que la variante, sus ECUs y el hardware puedan ofrecer, aunque el usuario no las haya mencionado y aunque su utilidad parezca secundaria. No selecciones únicamente las métricas “interesantes”: cualquier señal documentada o razonablemente candidata debe entrar en el catálogo técnico con identificador, origen y estado. Intenta implementar y verificar cada una. Si no puedes obtenerla, no la elimines silenciosamente: clasifícala como pendiente, sin decodificar, condicional, no disponible, no aplicable o inaccesible con este hardware. El inventario puede mostrarla vacía con ese estado; el cuadro de instrumentos nunca debe presentarla como una medición real sin evidencia.
 
+El hardware de referencia del proyecto es el Vgate vLinker FS USB. Determina primero todas las redes y protocolos que esta unidad puede alcanzar en el vehículo concreto. Después busca todas las métricas accesibles por OBD-II estándar y por diagnosis de fabricante con ese hardware: Mode 01 completo, Freeze Frame/Mode 02, DTC presentes/pendientes/permanentes, readiness, Mode 06, identidad estrictamente necesaria y todos los bloques, PID, DID, local identifiers y campos propietarios de cada ECU segura y legible. El catálogo base ya enumera todos los comandos Mode 01 decodificables por la versión incluida de python-OBD; amplíalo si la norma aplicable, el fabricante o la ECU documentan más. No hagas fuerza bruta ni envíes servicios de escritura.
+
 MODO DE EJECUCIÓN AUTÓNOMA
 - No termines después de proponer un plan, listar fuentes o crear una matriz. Continúa en esta misma tarea con la investigación, los cambios, las pruebas, el build y el informe final siempre que puedas hacerlo sin el coche.
 - No me preguntes por información que puedas obtener del repositorio, documentación pública, archivos adjuntos o una identificación segura ya implementable.
@@ -201,6 +203,7 @@ INTERFAZ, INFORME E IA
 - Genera las tarjetas desde capacidades reales; no diseñes primero una pantalla fija y fuerces después los datos.
 - Mantén dos niveles distintos: el cuadro de instrumentos muestra mediciones verificadas o una identificación claramente explicada; el inventario técnico muestra TODAS las métricas catalogadas, incluidas pendientes, condicionales, no disponibles, no aplicables e inaccesibles.
 - Registra cada familia nueva mediante un proveedor del catálogo general (`collector/metric_catalog.py`) para que ninguna candidata dependa de que el agente recuerde crear una tarjeta manual.
+- Cada métrica catalogada debe generar automáticamente su reloj/tarjeta, incluso sin valor. Conserva los filtros `Solo con datos`, `Todas las métricas`, `Sin datos visibles` y `Vista de diagnóstico`; no vuelvas a una lista fija que omita candidatos.
 - Diferencia disponible, sin lectura reciente, condicional, pendiente de decodificar, no ofrecida, no aplicable y error de comunicación.
 - Mantén todas las traducciones de español, inglés, italiano y alemán.
 - El informe debe ser comprensible para no mecánicos y separar hechos, cálculos, hipótesis, calidad y limitaciones.
@@ -262,6 +265,7 @@ La integración solo puede considerarse completa cuando:
 - una base vacía permite crear el coche sin datos precargados;
 - OBD genérico sigue funcionando si falla la capa propietaria;
 - cada señal visible tiene ECU, identificador, fórmula, unidad, estado y evidencia;
+- cada señal catalogada aparece en el cuadro dinámico y puede localizarse tanto con datos como sin ellos;
 - las no aplicables/no soportadas se excluyen de los relojes en directo, pero permanecen visibles y explicadas en el inventario completo; las desconocidas conservan evidencia;
 - el planificador mantiene una captura estable y reporta cobertura real;
 - cálculos, informe e IA distinguen procedencia y limitaciones;

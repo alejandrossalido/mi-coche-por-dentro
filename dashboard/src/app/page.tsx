@@ -113,6 +113,7 @@ export default function DashboardPage() {
   const [preflight, setPreflight] = useState<any>(null);
   const [manufacturerProbe, setManufacturerProbe] = useState<any>(null);
   const [manufacturerCapabilities, setManufacturerCapabilities] = useState<any[]>([]);
+  const [metricCatalogCapabilities, setMetricCatalogCapabilities] = useState<any[]>([]);
   const [uiMessage, setUiMessage] = useState('');
   const [samples, setSamples] = useState<any[]>([]);
   const [telemetryValues, setTelemetryValues] = useState<Record<string, any>>({});
@@ -219,6 +220,7 @@ export default function DashboardPage() {
       setVehicleSpec(null);
       setManufacturerProbe(null);
       setManufacturerCapabilities([]);
+      setMetricCatalogCapabilities([]);
       return;
     }
     const controller = new AbortController();
@@ -234,6 +236,14 @@ export default function DashboardPage() {
           const payload = await response.json();
           setManufacturerProbe(payload.last_probe || null);
           setManufacturerCapabilities(payload.capabilities || payload.last_probe?.live_signals || []);
+        }
+      })
+      .catch(() => undefined);
+    fetch(`/api/vehicles/${selectedVehicleId}/metric-catalog`, { signal: controller.signal, cache: 'no-store' })
+      .then(async (response) => {
+        if (response.ok) {
+          const payload = await response.json();
+          setMetricCatalogCapabilities(payload.metrics || []);
         }
       })
       .catch(() => undefined);
@@ -359,6 +369,13 @@ export default function DashboardPage() {
         } else {
           setUiMessage('Adaptador conectado y ECU detectada.');
         }
+        if (selectedVehicleId) {
+          const catalogResponse = await fetch(`/api/vehicles/${selectedVehicleId}/metric-catalog`, { cache: 'no-store' });
+          if (catalogResponse.ok) {
+            const catalogPayload = await catalogResponse.json();
+            setMetricCatalogCapabilities(catalogPayload.metrics || []);
+          }
+        }
       }
     } catch {
       setUiMessage('No se pudo conectar con el adaptador.');
@@ -481,7 +498,7 @@ export default function DashboardPage() {
 
   const currentVehicle = vehicles.find((vehicle) => vehicle.id === selectedVehicleId);
   const gaugeCapabilities = useMemo(() => {
-    const combined = [...manufacturerCapabilities, ...(preflight?.supported_pids || [])];
+    const combined = [...metricCatalogCapabilities, ...manufacturerCapabilities, ...(preflight?.supported_pids || [])];
     const byPid = new Map<string, any>();
     combined.forEach((item) => {
       if (!item?.pid_name) return;
@@ -489,7 +506,7 @@ export default function DashboardPage() {
       if (!previous || item.supported_verified || !previous.supported_verified) byPid.set(item.pid_name, item);
     });
     return Array.from(byPid.values());
-  }, [manufacturerCapabilities, preflight]);
+  }, [metricCatalogCapabilities, manufacturerCapabilities, preflight]);
   const currentVehicleSessions = sessions.filter(
     (session) => session.vehicle_id === selectedVehicleId && session.status !== 'recording'
   );

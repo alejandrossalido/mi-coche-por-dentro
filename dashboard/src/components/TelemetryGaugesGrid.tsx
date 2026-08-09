@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Car, Factory, Fuel, Thermometer, Wind, Zap } from 'lucide-react';
+import { Car, Eye, EyeOff, Factory, Fuel, Layers3, LayoutDashboard, Thermometer, Wind, Zap } from 'lucide-react';
 import { Gauge } from './Gauge';
+import { telemetryLabel } from '@/lib/telemetryLabels';
 
 interface TelemetryValues {
   [key: string]: number | undefined;
@@ -8,6 +9,8 @@ interface TelemetryValues {
 
 interface PIDCapability {
   pid_name: string;
+  label?: string;
+  category?: string;
   unit?: string;
   status?: string;
   supported_reported?: boolean;
@@ -29,6 +32,31 @@ interface TelemetryGaugesGridProps {
 }
 
 type Category = 'motor' | 'temp' | 'intake' | 'fuel' | 'dpf' | 'elec';
+type VisibilityMode = 'data' | 'all' | 'missing' | 'diagnostic';
+
+const categoryForCapability = (item: PIDCapability): Category => {
+  const text = `${item.pid_name} ${(item as any).category || ''}`.toLowerCase();
+  if (text.includes('temperatur') || text.includes('refriger')) return 'temp';
+  if (text.includes('admis') || text.includes('aire') || text.includes('turbo') || text.includes('egr')) return 'intake';
+  if (text.includes('dpf') || text.includes('escape') || text.includes('scr') || text.includes('catal')) return 'dpf';
+  if (text.includes('eléctr') || text.includes('electr') || text.includes('voltage') || text.includes('bater') || text.includes('altern')) return 'elec';
+  if (text.includes('combust') || text.includes('mezcla') || text.includes('inyec') || text.includes('fuel') || text.includes('o2_')) return 'fuel';
+  return 'motor';
+};
+
+const gaugeRange = (pid: string, unit = '') => {
+  const normalized = unit.toLowerCase();
+  if (normalized.includes('°c')) return { min: -40, max: pid.includes('EXHAUST') || pid.includes('CATALYST') ? 1000 : 160 };
+  if (normalized === 'v') return { min: 0, max: 18 };
+  if (normalized.includes('rpm')) return { min: 0, max: 9000 };
+  if (normalized.includes('km/h')) return { min: 0, max: 340 };
+  if (normalized.includes('kpa')) return { min: 0, max: 300 };
+  if (normalized.includes('bar')) return { min: 0, max: 2000 };
+  if (normalized.includes('mg/str')) return { min: -10, max: 1600 };
+  if (normalized.includes('nm')) return { min: -100, max: 600 };
+  if (normalized.includes('%')) return { min: 0, max: 100 };
+  return { min: 0, max: 100 };
+};
 
 const FUEL_STATUS_LABELS: Record<number, string> = {
   0: 'Sin estado informado',
@@ -47,6 +75,7 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
   tripMetrics
 }) => {
   const [category, setCategory] = useState<Category>('motor');
+  const [visibility, setVisibility] = useState<VisibilityMode>('data');
   const capabilityMap = useMemo(
     () => new Map(capabilities.map((item) => [item.pid_name, item])),
     [capabilities]
@@ -130,7 +159,29 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
     'VAG_DPF_ASH_MASS', 'VAG_DPF_DIFFERENTIAL_PRESSURE',
     'VAG_DPF_DISTANCE_SINCE_REGEN', 'VAG_DPF_TIME_SINCE_REGEN', 'VAG_DPF_REGEN_STATUS'
   ];
-  const showDpfCategory = !bkpWithoutFactoryDpf && dpfPids.some((pid) => shouldShow(pid));
+  const showDpfCategory = visibility !== 'diagnostic' || (!bkpWithoutFactoryDpf && dpfPids.some((pid) => shouldShow(pid)));
+
+  const allMetricCapabilities = useMemo(() => {
+    const byPid = new Map<string, PIDCapability>();
+    capabilities.forEach((item) => item?.pid_name && byPid.set(item.pid_name, item));
+    Object.keys(values).forEach((pid_name) => {
+      if (!byPid.has(pid_name)) byPid.set(pid_name, { pid_name, supported_verified: true });
+    });
+    return Array.from(byPid.values());
+  }, [capabilities, values]);
+  const dynamicMetrics = visibility === 'diagnostic'
+    ? []
+    : allMetricCapabilities.filter((item) => {
+        if (categoryForCapability(item) !== category) return false;
+        const value = values[item.pid_name];
+        const hasData = typeof value === 'number' && Number.isFinite(value);
+        if (visibility === 'data') return hasData;
+        if (visibility === 'missing') return !hasData;
+        return true;
+      });
+  const categoryColors: Record<Category, string> = {
+    motor: '#ff5a1f', temp: '#ffca28', intake: '#00dcff', fuel: '#ff2e9f', dpf: '#ff8a35', elec: '#c7ff35'
+  };
 
   const categories = [
     { id: 'motor' as const, label: 'Motor / Marcha', icon: Car, color: '#ff5a1f' },
@@ -143,6 +194,19 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
 
   return (
     <section aria-label="Instrumentación de telemetría">
+      <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+        {([
+          { id: 'data', label: 'Solo con datos', icon: Eye },
+          { id: 'all', label: 'Todas las métricas', icon: Layers3 },
+          { id: 'missing', label: 'Sin datos visibles', icon: EyeOff },
+          { id: 'diagnostic', label: 'Vista de diagnóstico', icon: LayoutDashboard }
+        ] as Array<{ id: VisibilityMode; label: string; icon: typeof Eye }>).map((item) => {
+          const Icon = item.icon;
+          return <button key={item.id} type="button" className={`sensor-tab${visibility === item.id ? ' active' : ''}`} onClick={() => setVisibility(item.id)}>
+            <Icon size={14} /> {item.label}
+          </button>;
+        })}
+      </div>
       <div className="sensor-tabs">
         <span className="section-kicker">Cuadro de instrumentos</span>
         {categories.map((item) => {
@@ -162,7 +226,7 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
       </div>
 
       <div className={`telemetry-grid${category === 'motor' ? ' telemetry-grid--motor' : ''}`}>
-        {category === 'motor' && <>
+        {visibility === 'diagnostic' && category === 'motor' && <>
           <Gauge label="Revoluciones del motor" value={values.RPM} unit="RPM" max={9000} color="#ff5a1f" variant="hero" />
           <Gauge label="Velocidad del vehículo" value={values.SPEED} unit="KM/H" max={340} color="#c7ff35" variant="hero" />
           {shouldShow('VAG_CAMSHAFT_SPEED') && <Gauge label="Velocidad del árbol de levas" value={values.VAG_CAMSHAFT_SPEED} unit="RPM" max={4500} color="#00dcff" statusText={statusFor(values.VAG_CAMSHAFT_SPEED, 'VAG_CAMSHAFT_SPEED')} />}
@@ -174,7 +238,7 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
           {shouldShow('RUN_TIME') && <Gauge label="Tiempo de funcionamiento" value={values.RUN_TIME} unit="S" max={3600} color="#8c8c94" statusText={statusFor(values.RUN_TIME, 'RUN_TIME')} />}
         </>}
 
-        {category === 'temp' && <>
+        {visibility === 'diagnostic' && category === 'temp' && <>
           <Gauge label="Refrigerante (ECT)" value={values.COOLANT_TEMP} unit="°C" max={120} color="#ffca28" />
           {shouldShow('VAG_RADIATOR_OUTLET_TEMP') && <Gauge label="Refrigerante a la salida del radiador" value={values.VAG_RADIATOR_OUTLET_TEMP} unit="°C" max={120} color="#c7ff35" statusText={statusFor(values.VAG_RADIATOR_OUTLET_TEMP, 'VAG_RADIATOR_OUTLET_TEMP')} />}
           {shouldShow('VAG_COOLING_FAN_COMMAND') && <Gauge label="Mando del ventilador del radiador" value={values.VAG_COOLING_FAN_COMMAND} unit="%" max={100} color="#ff2e9f" statusText={statusFor(values.VAG_COOLING_FAN_COMMAND, 'VAG_COOLING_FAN_COMMAND')} />}
@@ -184,7 +248,7 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
           {shouldShow('VAG_EXHAUST_TEMP_1', 'VAG_EXHAUST_TEMP_2', 'CATALYST_TEMP_B1S1', 'CATALYST_TEMP_B2S1', 'CATALYST_TEMP_B1S2', 'CATALYST_TEMP_B2S2') && <Gauge label="Gases de escape" value={exhaustTemperature} unit="°C" max={900} color="#ff334f" statusText={statusFor(exhaustTemperature, 'VAG_EXHAUST_TEMP_1', 'VAG_EXHAUST_TEMP_2', 'CATALYST_TEMP_B1S1', 'CATALYST_TEMP_B2S1', 'CATALYST_TEMP_B1S2', 'CATALYST_TEMP_B2S2')} />}
         </>}
 
-        {category === 'intake' && <>
+        {visibility === 'diagnostic' && category === 'intake' && <>
           <Gauge label="Caudal de aire (MAF)" value={maf} unit="G/S" max={200} color="#00dcff" statusText={typeof values.MAF === 'number' ? 'Dato real de la ECU' : typeof calculatedMaf === 'number' ? 'Calculado desde mg/str y RPM (motor 4 cilindros)' : statusFor(undefined, 'MAF', 'VAG_AIR_MASS_ACTUAL')} />
           <Gauge label="Masa de aire por ciclo" value={values.VAG_AIR_MASS_ACTUAL} unit="MG/STR" max={1600} color="#00dcff" statusText={statusFor(values.VAG_AIR_MASS_ACTUAL, 'VAG_AIR_MASS_ACTUAL')} />
           <Gauge label="Presión del colector (MAP)" value={manifoldPressure} unit="KPA" max={300} color="#ff5a1f" statusText={typeof values.INTAKE_PRESSURE === 'number' ? 'Dato OBD genérico' : typeof values.VAG_BOOST_PRESSURE_ACTUAL === 'number' ? 'Presión absoluta real del colector, medida por la ECU' : statusFor(undefined, 'INTAKE_PRESSURE', 'VAG_BOOST_PRESSURE_ACTUAL')} />
@@ -197,7 +261,7 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
           <Gauge label="Mando de la EGR" value={values.VAG_EGR_DUTY_CYCLE} unit="%" min={0} max={100} color="#ffca28" statusText={statusFor(values.VAG_EGR_DUTY_CYCLE, 'VAG_EGR_DUTY_CYCLE')} />
         </>}
 
-        {category === 'fuel' && <>
+        {visibility === 'diagnostic' && category === 'fuel' && <>
           {!isPumpDuse && <Gauge label="Presión del rail real" value={fuelPressureBar} unit="BAR" max={hasRailPressure ? 2000 : 10} color="#00dcff" statusText={statusFor(fuelPressureBar, 'VAG_RAIL_PRESSURE_ACTUAL', 'FUEL_RAIL_PRESSURE_DIRECT', 'FUEL_RAIL_PRESSURE_ABS', 'FUEL_PRESSURE')} />}
           {!isPumpDuse && <Gauge label="Presión del rail solicitada" value={values.VAG_RAIL_PRESSURE_REQUESTED} unit="BAR" max={2000} color="#c7ff35" statusText={statusFor(values.VAG_RAIL_PRESSURE_REQUESTED, 'VAG_RAIL_PRESSURE_REQUESTED')} />}
           {isPumpDuse && <div className="lcd-card"><span>Sistema de inyección</span><strong>Inyector-bomba // sin rail common-rail</strong></div>}
@@ -218,7 +282,7 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
           {isPumpDuse && [1, 2, 3, 4].map((cylinder) => <Gauge key={`switch-${cylinder}`} label={`Desviación de conmutación ${cylinder}`} value={values[`VAG_INJECTOR_SWITCH_TIME_${cylinder}`]} unit="MS" min={0} max={0.5} color="#ff8a1f" statusText={statusFor(values[`VAG_INJECTOR_SWITCH_TIME_${cylinder}`], `VAG_INJECTOR_SWITCH_TIME_${cylinder}`)} />)}
         </>}
 
-        {category === 'dpf' && showDpfCategory && <>
+        {visibility === 'diagnostic' && category === 'dpf' && showDpfCategory && <>
           <Gauge label="Hollín calculado" value={values.VAG_DPF_SOOT_CALCULATED} unit="G" max={50} color="#ff8a35" statusText={statusFor(values.VAG_DPF_SOOT_CALCULATED, 'VAG_DPF_SOOT_CALCULATED')} />
           <Gauge label="Hollín medido" value={values.VAG_DPF_SOOT_MEASURED} unit="G" max={50} color="#ffca28" statusText={statusFor(values.VAG_DPF_SOOT_MEASURED, 'VAG_DPF_SOOT_MEASURED')} />
           <Gauge label="Carga de hollín" value={values.VAG_DPF_SOOT_PERCENT} unit="%" max={100} color="#ff8a35" statusText={statusFor(values.VAG_DPF_SOOT_PERCENT, 'VAG_DPF_SOOT_PERCENT')} />
@@ -229,11 +293,32 @@ export const TelemetryGaugesGrid: React.FC<TelemetryGaugesGridProps> = ({
           <div className="lcd-card"><span>Estado de regeneración</span><strong>{typeof values.VAG_DPF_REGEN_STATUS === 'number' ? ((values.VAG_DPF_REGEN_STATUS & 3) ? 'Regeneración activa' : 'Regeneración inactiva') : statusFor(undefined, 'VAG_DPF_REGEN_STATUS')}</strong></div>
         </>}
 
-        {category === 'elec' && <>
+        {visibility === 'diagnostic' && category === 'elec' && <>
           <Gauge label="Módulo de control" value={moduleVoltage} unit="V" min={10} max={16} color="#c7ff35" statusText={statusFor(moduleVoltage, 'VAG_ECU_VOLTAGE', 'CONTROL_MODULE_VOLTAGE')} />
           {shouldShow('VAG_ALTERNATOR_LOAD') && <Gauge label="Carga del alternador" value={values.VAG_ALTERNATOR_LOAD} unit="%" max={100} color="#ffca28" statusText={statusFor(values.VAG_ALTERNATOR_LOAD, 'VAG_ALTERNATOR_LOAD')} />}
           {shouldShow('ELM_VOLTAGE') && <Gauge label="Alimentación del adaptador OBD" value={values.ELM_VOLTAGE} unit="V" min={10} max={16} color="#00dcff" statusText={statusFor(values.ELM_VOLTAGE, 'ELM_VOLTAGE')} />}
         </>}
+
+        {visibility !== 'diagnostic' && dynamicMetrics.map((item) => {
+          const value = values[item.pid_name];
+          const range = gaugeRange(item.pid_name, item.unit || '');
+          return <Gauge
+            key={item.pid_name}
+            label={item.label || telemetryLabel(item.pid_name)}
+            value={value}
+            unit={(item.unit || '—').toUpperCase()}
+            min={range.min}
+            max={range.max}
+            color={categoryColors[category]}
+            statusText={statusFor(value, item.pid_name)}
+          />;
+        })}
+        {visibility !== 'diagnostic' && dynamicMetrics.length === 0 && (
+          <div className="lcd-card">
+            <span>{visibility === 'data' ? 'Métricas con datos' : visibility === 'missing' ? 'Métricas sin datos visibles' : 'Métricas catalogadas'}</span>
+            <strong>No hay métricas en esta categoría para el filtro seleccionado</strong>
+          </div>
+        )}
       </div>
     </section>
   );

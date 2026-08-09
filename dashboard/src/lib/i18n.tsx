@@ -16,6 +16,14 @@ type Translation = { en: string; it: string; de: string };
 // Spanish is the canonical source language. Keeping the source sentence as the
 // key also lets us localize safe messages returned by the local backend.
 export const UI_TRANSLATIONS: Record<string, Translation> = {
+  'Solo con datos': { en: 'With data only', it: 'Solo con dati', de: 'Nur mit Daten' },
+  'Todas las métricas': { en: 'All metrics', it: 'Tutte le metriche', de: 'Alle Messgrößen' },
+  'Sin datos visibles': { en: 'Without visible data', it: 'Senza dati visibili', de: 'Ohne sichtbare Daten' },
+  'Vista de diagnóstico': { en: 'Diagnostic view', it: 'Vista diagnostica', de: 'Diagnoseansicht' },
+  'Métricas con datos': { en: 'Metrics with data', it: 'Metriche con dati', de: 'Messgrößen mit Daten' },
+  'Métricas sin datos visibles': { en: 'Metrics without visible data', it: 'Metriche senza dati visibili', de: 'Messgrößen ohne sichtbare Daten' },
+  'Métricas catalogadas': { en: 'Catalogued metrics', it: 'Metriche catalogate', de: 'Katalogisierte Messgrößen' },
+  'No hay métricas en esta categoría para el filtro seleccionado': { en: 'There are no metrics in this category for the selected filter', it: 'Non ci sono metriche in questa categoria per il filtro selezionato', de: 'Für den gewählten Filter gibt es in dieser Kategorie keine Messgrößen' },
   'Todas las métricas investigadas para este vehículo': { en: 'All metrics investigated for this vehicle', it: 'Tutte le metriche analizzate per questo veicolo', de: 'Alle für dieses Fahrzeug untersuchten Messgrößen' },
   'Incluye los PIDs estándar y todos los candidatos específicos añadidos por el agente. Ninguna métrica posible debe omitirse: si todavía no puede obtenerse, queda claramente marcada como pendiente o no disponible.': { en: 'Includes standard PIDs and every vehicle-specific candidate added by the agent. No possible metric may be silently omitted: if it cannot yet be obtained, it is clearly marked as pending or unavailable.', it: 'Include i PID standard e tutti i candidati specifici aggiunti dall’agente. Nessuna metrica possibile può essere omessa: se non è ancora ottenibile, viene indicata chiaramente come in attesa o non disponibile.', de: 'Enthält Standard-PIDs und alle vom Agenten ergänzten fahrzeugspezifischen Kandidaten. Keine mögliche Messgröße darf stillschweigend fehlen: Ist sie noch nicht abrufbar, wird sie klar als ausstehend oder nicht verfügbar markiert.' },
   'Pendiente de decodificar': { en: 'Pending decoding', it: 'Decodifica in attesa', de: 'Dekodierung ausstehend' },

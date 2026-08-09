@@ -906,13 +906,13 @@ def start_session(s: SessionStart):
         if item.get("supported_verified")
     }
     requested_pids = list(profile["pids"])
-    # En una ECU KWP inventariada, todos los perfiles conservan todas las
-    # señales Volkswagen verificadas. El perfil decide la prioridad y las
-    # instrucciones; nunca descarta evidencia disponible.
+    # Una integración avanzada no debe perder una métrica porque el perfil se
+    # diseñó antes que su catálogo. Toda capacidad verificada, estándar u OEM,
+    # se incorpora; el planificador conserva frecuencias distintas para no
+    # convertir más cobertura en más carga innecesaria del bus.
     for item in capability_records:
-        if not item.get("supported_verified") or not str(item.get("source", "")).startswith("vag_kwp2000"):
-            continue
-        requested_pids.append(str(item["pid_name"]))
+        if item.get("supported_verified"):
+            requested_pids.append(str(item["pid_name"]))
     requested_pids = list(dict.fromkeys(requested_pids))
     if str(vehicle.get("engine_code", "")).upper() == "BKP":
         # La documentación de esta variante identifica catalizador de

@@ -18,6 +18,8 @@ Algunos datos —inyección, turbo, EGR, DPF, regeneraciones o métricas propias
 
 El agente debe intentar catalogar **todas** las métricas posibles del vehículo, no solo las que considere más interesantes. Las que consiga demostrar aparecerán como confirmadas; las demás permanecerán en el inventario como pendientes, condicionales, no disponibles, no aplicables o inaccesibles. Que una métrica no pueda leerse no bloquea la importación y nunca se sustituye por un valor inventado.
 
+En la pantalla de telemetría, cada métrica catalogada dispone de su propio reloj. Puedes alternar entre **Solo con datos**, **Todas las métricas**, **Sin datos visibles** y la vista de diagnóstico resumida. Así una señal pendiente no desaparece y puede implementarse más adelante sin rediseñar la aplicación.
+
 Utiliza un agente potente con acceso al repositorio, Internet y lectura de PDF; por ejemplo, **Codex con GPT-5.6 Sol**, o una herramienta equivalente. No basta con un chat que no pueda inspeccionar y modificar el proyecto.
 
 ### Qué debe indicar el usuario
