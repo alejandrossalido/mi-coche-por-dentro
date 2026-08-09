@@ -1668,15 +1668,15 @@ Estas decisiones deben resolverse mediante prototipos pequeños y ADRs, no por p
 
 ## 41. Architecture Decision Records
 
-Toda decisión importante debe documentarse en `docs/adr/`.
+Toda decisión importante debe documentarse en `docs/informacion_tecnica/arquitectura/adr/`.
 
 Ejemplos:
 
 ```text
-docs/adr/0001-use-sqlite-and-parquet.md
-docs/adr/0002-wrap-python-obd.md
-docs/adr/0003-read-only-first-version.md
-docs/adr/0004-ai-provider-abstraction.md
+docs/informacion_tecnica/arquitectura/adr/0001-use-sqlite-and-parquet.md
+docs/informacion_tecnica/arquitectura/adr/0002-wrap-python-obd.md
+docs/informacion_tecnica/arquitectura/adr/0003-read-only-first-version.md
+docs/informacion_tecnica/arquitectura/adr/0004-ai-provider-abstraction.md
 ```
 
 Cada ADR debe incluir:

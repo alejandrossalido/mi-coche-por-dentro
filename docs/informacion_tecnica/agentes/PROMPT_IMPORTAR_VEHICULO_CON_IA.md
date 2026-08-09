@@ -89,7 +89,7 @@ REGLAS DE SEGURIDAD INNEGOCIABLES
 
 FASE 1 — AUDITORÍA DEL PROYECTO
 Antes de modificar nada:
-- lee README.md, docs/GUIA_USO_E_IMPORTACION_CON_IA.md, la especificación y las decisiones de arquitectura relevantes;
+- lee README.md, docs/IMPORTAR_VEHICULO.md, esta carpeta técnica, la especificación y las decisiones de arquitectura relevantes;
 - localiza resolución de fichas, perfiles existentes, transporte ELM/STN, descubrimiento, captura, catálogo de señales, capacidades, interfaz, informes y pruebas;
 - busca una integración existente técnicamente cercana, pero no copies identificadores sin demostrar aplicabilidad;
 - ejecuta las pruebas y el build actuales; separa fallos previos de los introducidos;
