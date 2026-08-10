@@ -33,7 +33,12 @@ ALLOWED_TRANSITIONS: Dict[ConnectionState, set] = {
 
     ConnectionState.DISCOVERING_ADAPTER: {ConnectionState.ADAPTER_FOUND, ConnectionState.DISCONNECTED, ConnectionState.ERROR},
     ConnectionState.ADAPTER_FOUND: {ConnectionState.CONNECTING_ADAPTER, ConnectionState.DISCONNECTED, ConnectionState.ERROR},
-    ConnectionState.CONNECTING_ADAPTER: {ConnectionState.ADAPTER_CONNECTED, ConnectionState.DISCONNECTED, ConnectionState.ERROR},
+    ConnectionState.CONNECTING_ADAPTER: {
+        ConnectionState.ADAPTER_CONNECTED,
+        ConnectionState.VEHICLE_NOT_RESPONDING,
+        ConnectionState.DISCONNECTED,
+        ConnectionState.ERROR,
+    },
     ConnectionState.ADAPTER_CONNECTED: {ConnectionState.INITIALIZING_PROTOCOL, ConnectionState.DISCONNECTED, ConnectionState.ERROR},
     ConnectionState.INITIALIZING_PROTOCOL: {ConnectionState.VEHICLE_CONNECTED, ConnectionState.VEHICLE_NOT_RESPONDING, ConnectionState.ERROR},
     ConnectionState.VEHICLE_NOT_RESPONDING: {ConnectionState.VEHICLE_CONNECTED, ConnectionState.RECONNECTING, ConnectionState.DISCONNECTED, ConnectionState.ERROR},

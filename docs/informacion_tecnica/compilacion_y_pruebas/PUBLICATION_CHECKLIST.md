@@ -1,35 +1,40 @@
-# Lista de preparación para la publicación
+# Lista de publicación
 
-## Ya realizado en la copia pública
+## Automatizado en cada cambio
 
-- Separar la copia pública de la carpeta privada.
-- Excluir bases de datos, telemetría, variables de entorno, registros y compilaciones.
-- Hacer que una instalación nueva arranque sin vehículos personales.
-- Añadir instrucciones iniciales de instalación y privacidad.
-- Compilar la interfaz desde una instalación limpia de npm.
-- Ejecutar la suite aislada de los datos privados: 108 pruebas superadas.
-- Corregir el reconocimiento OEM de nombres habituales como `Passat B6` sin depender de IDs precargados.
-- Crear las dos guías principales: instalación/primer uso e importación avanzada con IA.
-- Crear un entorno Python 3.11 desde cero y corregir el rango incompatible de MCP 2.0.
-- Generar y superar el smoke test del ejecutable con un garaje nuevo vacío.
+- Suite completa de Python.
+- Auditoría de vulnerabilidades de Python y npm.
+- Comprobación de tipos de la interfaz.
+- Cobertura de traducción ES/EN/IT/DE.
+- Compilación estática de producción.
+- Construcción y arranque real del ejecutable con un garaje temporal vacío.
+- Rechazo automático de bases de datos, telemetría, `.env` y registros en el paquete.
+- CI en Windows con permisos mínimos.
+- Dependabot semanal para Python y npm.
 
-## Pendiente antes de GitHub
+## Verificación de cada paquete para GitHub Releases
 
-- Revisar en un segundo ordenador que la instalación y los controladores OBD se comportan igual.
-- Validar la conexión física con un adaptador OBD real; durante la preparación solo estaba disponible un puerto Intel AMT no OBD.
-- Actualizar de forma controlada Next.js y ECharts; la auditoría actual conserva vulnerabilidades que requieren cambios incompatibles y no deben corregirse con `--force` sin pruebas.
-- Preparar una captura de ejemplo anonimizada o datos simulados.
-- Elegir una licencia.
-- Revisar nombre, descripción, iconos y capturas del proyecto.
-- Generar un ejecutable limpio y probarlo en un equipo o usuario de Windows sin datos previos.
-- Inicializar Git local, revisar el primer commit y conectar el remoto solo con autorización.
+1. Construir desde un clon limpio mediante `scripts/build_windows.ps1`.
+2. Ejecutar `scripts/smoke_test_windows.ps1` con un perfil temporal y garaje vacío.
+3. Comprobar el ZIP en Windows 10 u 11 de 64 bits sin Python ni Node instalados.
+4. Verificar que SmartScreen identifica el origen esperado y publicar el SHA-256 del ZIP.
+5. Conectar físicamente un adaptador compatible y realizar una captura corta de solo lectura.
+6. Confirmar que no hay vehículos, bases de datos, telemetría, registros, `.env` ni claves dentro del paquete.
+7. Crear la versión de GitHub Releases únicamente después de superar los pasos anteriores.
 
-## Regla para nuevos vehículos y PIDs propietarios
+## Límites que deben declararse
 
-1. Añadir el vehículo desde el Garaje.
-2. Confirmar el protocolo y la centralita con comandos de solo lectura.
-3. Registrar una sesión breve y conservar las respuestas brutas necesarias para depuración, sin VIN ni datos personales.
-4. Mapear cada señal con documentación o evidencia reproducible.
-5. Validar unidades, escala, rango y comportamiento en distintas condiciones.
-6. Ocultar las señales que la ECU no ofrezca o que no hayan sido verificadas.
-7. Añadir pruebas automatizadas antes de incorporar el perfil al proyecto.
+- La cobertura depende del vehículo, ECU, protocolo y adaptador.
+- Una tarjeta pendiente no equivale a una señal compatible.
+- `--` significa que no existe una lectura válida en ese momento.
+- El programa no sustituye a un taller ni garantiza superar una ITV.
+- No utilizar la pantalla mientras se conduce.
+
+## Nuevos vehículos y PIDs propietarios
+
+1. Identificar de forma inequívoca variante, motor y ECU.
+2. Confirmar protocolo usando exclusivamente servicios de lectura.
+3. Documentar el origen de cada identificador, fórmula, unidad y rango.
+4. Marcar por separado candidatos, señales anunciadas y lecturas verificadas.
+5. Validar varias condiciones operativas y añadir pruebas automatizadas.
+6. No publicar VIN, matrículas, telemetría personal ni documentación sin permiso.

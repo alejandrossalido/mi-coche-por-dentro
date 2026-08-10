@@ -344,7 +344,7 @@ export default function DashboardPage() {
       const data = await response.json();
       setAdapterStatus(data.status);
       if (!data.success) {
-        setUiMessage('No se encontró una ECU operativa. Revisa contacto y puerto.');
+        setUiMessage(data.message || 'No se encontró una ECU operativa. Revisa contacto y puerto.');
       } else {
         const selectedVehicle = vehicles.find((vehicle) => vehicle.id === selectedVehicleId);
         const isVag = ['volkswagen', 'vw', 'audi', 'seat', 'skoda', 'škoda'].includes(String(selectedVehicle?.make || '').toLowerCase());

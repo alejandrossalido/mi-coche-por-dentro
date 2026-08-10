@@ -659,15 +659,17 @@ class AIService:
 
     def analyze_session(self, vehicle_info: Dict[str, Any], dtcs: List[Dict[str, Any]],
                         stats: Dict[str, Any], rule_findings: List[Dict[str, Any]],
-                        symptom_note: Optional[str] = None) -> AiAnalysisResponse:
+                        symptom_note: Optional[str] = None,
+                        allow_remote: bool = False) -> AiAnalysisResponse:
         """
-        Ejecuta el análisis asistido por IA. Si existe ANTHROPIC_API_KEY, invoca a Claude 3.5 Sonnet;
-        de lo contrario, utiliza el motor de inferencia local determinista conforme al esquema.
+        Ejecuta el análisis determinista local. La rama remota heredada solo se
+        habilita mediante ``allow_remote=True``; configurar una clave por sí sola
+        nunca debe transmitir telemetría.
         """
         context_json = self.build_context_prompt(vehicle_info, dtcs, stats, rule_findings, symptom_note)
 
         # Si se configura la clave de Anthropic en .env
-        if self.api_key and self.api_key.startswith("sk-ant"):
+        if allow_remote and self.api_key and self.api_key.startswith("sk-ant"):
             try:
                 import httpx
                 headers = {

@@ -9,7 +9,7 @@ from typing import Dict
 
 APP_NAME = "MiCochePorDentro"
 APP_DISPLAY_NAME = "Mi Coche por Dentro"
-APP_VERSION = "1.10.0"
+APP_VERSION = "1.10.1"
 
 
 def load_environment() -> list[Path]:
