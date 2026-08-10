@@ -220,26 +220,29 @@ export default function DashboardPage() {
       setVehicleSpec(null);
       setManufacturerProbe(null);
       setManufacturerCapabilities([]);
-      setMetricCatalogCapabilities([]);
-      return;
     }
     const controller = new AbortController();
-    setVehicleSpec(null);
-    fetch(`/api/vehicles/${selectedVehicleId}/spec`, { signal: controller.signal })
-      .then(async (response) => {
-        if (response.ok) setVehicleSpec(await response.json());
-      })
-      .catch(() => undefined);
-    fetch(`/api/vehicles/${selectedVehicleId}/manufacturer-probe`, { signal: controller.signal, cache: 'no-store' })
-      .then(async (response) => {
-        if (response.ok) {
-          const payload = await response.json();
-          setManufacturerProbe(payload.last_probe || null);
-          setManufacturerCapabilities(payload.capabilities || payload.last_probe?.live_signals || []);
-        }
-      })
-      .catch(() => undefined);
-    fetch(`/api/vehicles/${selectedVehicleId}/metric-catalog`, { signal: controller.signal, cache: 'no-store' })
+    if (selectedVehicleId) {
+      setVehicleSpec(null);
+      fetch(`/api/vehicles/${selectedVehicleId}/spec`, { signal: controller.signal })
+        .then(async (response) => {
+          if (response.ok) setVehicleSpec(await response.json());
+        })
+        .catch(() => undefined);
+      fetch(`/api/vehicles/${selectedVehicleId}/manufacturer-probe`, { signal: controller.signal, cache: 'no-store' })
+        .then(async (response) => {
+          if (response.ok) {
+            const payload = await response.json();
+            setManufacturerProbe(payload.last_probe || null);
+            setManufacturerCapabilities(payload.capabilities || payload.last_probe?.live_signals || []);
+          }
+        })
+        .catch(() => undefined);
+    }
+    const catalogUrl = selectedVehicleId
+      ? `/api/vehicles/${selectedVehicleId}/metric-catalog`
+      : '/api/metric-catalog';
+    fetch(catalogUrl, { signal: controller.signal, cache: 'no-store' })
       .then(async (response) => {
         if (response.ok) {
           const payload = await response.json();

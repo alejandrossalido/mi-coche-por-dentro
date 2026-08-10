@@ -644,6 +644,24 @@ def get_vehicle_metric_catalog(vehicle_id: str):
     }
 
 
+@app.get("/api/metric-catalog")
+def get_base_metric_catalog():
+    """Devuelve el catálogo universal incluso si el garaje todavía está vacío."""
+    metrics = metric_catalog_for_vehicle({})
+    pending_statuses = {"not_tested", "mapping_required", "undecoded", "conditional"}
+    pending = sum(str(item.get("status", "")) in pending_statuses for item in metrics)
+    return {
+        "vehicle_id": None,
+        "metrics": metrics,
+        "summary": {
+            "catalogued": len(metrics),
+            "confirmed": 0,
+            "pending": pending,
+            "unavailable": max(0, len(metrics) - pending),
+        },
+    }
+
+
 @app.get("/api/diagnostics/preflight")
 def diagnostic_preflight(vehicle_id: str):
     vehicle = db.get_vehicle(vehicle_id)
