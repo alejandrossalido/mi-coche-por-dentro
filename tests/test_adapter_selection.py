@@ -73,3 +73,71 @@ def test_auto_detection_does_not_try_unrelated_com_port(monkeypatch):
     assert manager.connect() is False
     assert manager.active_port is None
     assert manager.state == ConnectionState.ERROR
+
+
+def test_adapter_retries_safe_serial_settings_until_ecu_responds(monkeypatch):
+    attempts = []
+
+    class FakeConnection:
+        def __init__(self, status):
+            self._status = status
+            self.closed = False
+
+        def status(self):
+            return self._status
+
+        def protocol_name(self):
+            return "ISO 15765-4 (CAN 11/500)"
+
+        def close(self):
+            self.closed = True
+
+    first = FakeConnection("OBD_CONNECTED")
+    second = FakeConnection("CAR_CONNECTED")
+
+    def build_connection(**kwargs):
+        attempts.append(kwargs)
+        return first if len(attempts) == 1 else second
+
+    fake_obd = SimpleNamespace(
+        OBD=build_connection,
+        OBDStatus=SimpleNamespace(
+            CAR_CONNECTED="CAR_CONNECTED",
+            OBD_CONNECTED="OBD_CONNECTED",
+        ),
+    )
+    monkeypatch.setattr(adapter_module, "obd", fake_obd)
+
+    manager = AdapterManager()
+    assert manager.connect(com_port="com5") is True
+    assert first.closed is True
+    assert attempts[0]["baudrate"] == 115200
+    assert attempts[0]["fast"] is True
+    assert attempts[1]["fast"] is False
+    assert manager.active_port == "COM5"
+    assert manager.get_status()["attempt_count"] == 2
+
+
+def test_adapter_without_python_obd_never_fakes_production_connection(monkeypatch):
+    monkeypatch.setattr(adapter_module, "obd", None)
+    monkeypatch.setenv("APP_MODE", "production")
+    manager = AdapterManager()
+
+    assert manager.connect(com_port="COM5") is False
+    assert manager.connection is None
+    assert manager.get_status()["is_connected"] is False
+    assert manager.state == ConnectionState.ERROR
+
+
+def test_invalid_port_is_rejected_before_opening_adapter(monkeypatch):
+    calls = []
+    fake_obd = SimpleNamespace(
+        OBD=lambda **kwargs: calls.append(kwargs),
+        OBDStatus=SimpleNamespace(CAR_CONNECTED="CAR_CONNECTED", OBD_CONNECTED="OBD_CONNECTED"),
+    )
+    monkeypatch.setattr(adapter_module, "obd", fake_obd)
+    manager = AdapterManager()
+
+    assert manager.connect(com_port='COM5" -bad') is False
+    assert calls == []
+    assert manager.state == ConnectionState.ERROR

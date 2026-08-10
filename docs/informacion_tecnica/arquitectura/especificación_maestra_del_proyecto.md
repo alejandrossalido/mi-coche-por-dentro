@@ -1575,7 +1575,7 @@ No es obligatorio utilizar un monorepo si añade complejidad innecesaria. La est
 Variables recomendadas:
 
 ```text
-APP_ENV=development
+APP_ENV=production
 DATABASE_PATH=./data/database/app.db
 TELEMETRY_PATH=./data/telemetry
 REPORT_PATH=./data/reports

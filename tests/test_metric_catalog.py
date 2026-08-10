@@ -95,3 +95,25 @@ def test_metric_catalog_api_exposes_pending_and_confirmed_candidates(monkeypatch
     assert payload["summary"]["catalogued"] >= len(ALL_KWP_SIGNALS)
     assert payload["summary"]["confirmed"] == 1
     assert payload["summary"]["pending"] > 0
+
+
+def test_base_metric_catalog_api_works_with_an_empty_garage():
+    response = TestClient(backend_main.app).get("/api/metric-catalog")
+
+    assert response.status_code == 200
+    payload = response.json()
+    names = {row["pid_name"] for row in payload["metrics"]}
+    categories = {row["category"] for row in payload["metrics"]}
+
+    assert payload["vehicle_id"] is None
+    assert payload["summary"]["catalogued"] == len(payload["metrics"])
+    assert len(names) >= 90
+    assert "OEM_DPF_DIFFERENTIAL_PRESSURE" in names
+    assert {
+        "Motor, marcha y mandos",
+        "Temperaturas y refrigeración",
+        "Admisión, aire, EGR y turbo",
+        "Combustible, mezcla e inyección",
+        "Escape, DPF/GPF y SCR",
+        "Sistema eléctrico y comunicaciones",
+    }.issubset(categories)

@@ -3,6 +3,7 @@ Servicio API Backend FastAPI para 'Mi Coche por Dentro'.
 Expone endpoints REST y WebSocket para control de captura, adaptador, sesiones, DTCs y análisis.
 """
 import asyncio
+import hashlib
 import logging
 import os
 import threading
@@ -15,6 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from urllib.parse import urlsplit
 
 from app_paths import APP_VERSION, backups_path, load_environment, resource_path
 
@@ -64,12 +67,49 @@ app = FastAPI(
 
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    TrustedHostMiddleware,
+    allowed_hosts=["127.0.0.1", "localhost", "testserver"],
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"^https?://(?:127\.0\.0\.1|localhost)(?::\d{1,5})?$",
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
+
+
+def _is_allowed_browser_origin(origin: Optional[str]) -> bool:
+    """Accept only the local dashboard as a browser/WebSocket origin."""
+    if not origin:
+        return True  # Native clients and the automated test client omit Origin.
+    try:
+        parsed = urlsplit(origin)
+        if parsed.scheme not in {"http", "https"}:
+            return False
+        if parsed.hostname not in {"127.0.0.1", "localhost"}:
+            return False
+        return parsed.port is None or 1 <= parsed.port <= 65535
+    except ValueError:
+        return False
+
+
+@app.middleware("http")
+async def add_local_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+        "connect-src 'self' ws://127.0.0.1:* ws://localhost:*; "
+        "object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+    )
+    if request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
 
 # Instancias globales del sistema
 db = DatabaseManager()
@@ -282,8 +322,8 @@ class VehicleCreate(BaseModel):
         return value.upper() if value else value
 
 class SessionStart(BaseModel):
-    vehicle_id: str
-    profile_id: Optional[str] = None
+    vehicle_id: str = Field(min_length=1, max_length=100)
+    profile_id: Optional[str] = Field(default=None, max_length=100)
     engine_condition: Literal["cold", "warm", "hot"] = "warm"
     notes: str = Field(default="", max_length=500)
     title: str = Field(default="", max_length=100)
@@ -303,12 +343,12 @@ class SessionUpdate(BaseModel):
         return value.strip() if isinstance(value, str) else value
 
 class ConnectRequest(BaseModel):
-    com_port: Optional[str] = None
+    com_port: Optional[str] = Field(default=None, max_length=120)
 
 class EventMarkerCreate(BaseModel):
-    timestamp_offset_ms: int
-    event_type: str
-    note: Optional[str] = ""
+    timestamp_offset_ms: int = Field(ge=0, le=86_400_000)
+    event_type: str = Field(min_length=1, max_length=50)
+    note: Optional[str] = Field(default="", max_length=500)
 
 # --- ENDPOINTS ---
 
@@ -352,7 +392,16 @@ def get_adapter_compatibility():
 @app.post("/api/adapter/connect")
 def connect_adapter(req: ConnectRequest):
     success = adapter.connect(com_port=req.com_port)
-    return {"success": success, "status": adapter.get_status()}
+    status = adapter.get_status()
+    return {
+        "success": success,
+        "status": status,
+        "message": (
+            "Adaptador conectado y ECU detectada."
+            if success
+            else status.get("last_error") or "No se pudo conectar con la ECU."
+        ),
+    }
 
 @app.post("/api/adapter/disconnect")
 def disconnect_adapter():
@@ -591,6 +640,24 @@ def get_vehicle_metric_catalog(vehicle_id: str):
             "confirmed": confirmed,
             "pending": pending,
             "unavailable": max(0, unavailable),
+        },
+    }
+
+
+@app.get("/api/metric-catalog")
+def get_base_metric_catalog():
+    """Devuelve el catálogo universal incluso si el garaje todavía está vacío."""
+    metrics = metric_catalog_for_vehicle({})
+    pending_statuses = {"not_tested", "mapping_required", "undecoded", "conditional"}
+    pending = sum(str(item.get("status", "")) in pending_statuses for item in metrics)
+    return {
+        "vehicle_id": None,
+        "metrics": metrics,
+        "summary": {
+            "catalogued": len(metrics),
+            "confirmed": 0,
+            "pending": pending,
+            "unavailable": max(0, len(metrics) - pending),
         },
     }
 
@@ -1222,10 +1289,12 @@ def get_protocol(protocol_id: str):
     return ProtocolManager.get_protocol(protocol_id)
 
 class FaultRequest(BaseModel):
-    fault_type: str
+    fault_type: Literal["BLUETOOTH_DISCONNECT", "IGNITION_OFF", "CORRUPTED_FRAME", "RECOVER"]
 
 @app.post("/api/simulator/trigger-fault")
 def trigger_fault(req: FaultRequest):
+    if os.getenv("APP_ENV", "production").strip().lower() not in {"development", "test"}:
+        raise HTTPException(status_code=404, detail="Simulador no disponible en producción.")
     return failure_simulator.inject_fault(req.fault_type)
 
 # --- MODE 06, GARAGE E INFORMES ZIP ---
@@ -1233,8 +1302,8 @@ def trigger_fault(req: FaultRequest):
 exporter = VehicleBackupExporter(db_manager=db, telemetry_store=telemetry_store)
 
 class RepairCreate(BaseModel):
-    description: str
-    notes: Optional[str] = ""
+    description: str = Field(min_length=1, max_length=500)
+    notes: Optional[str] = Field(default="", max_length=2000)
 
 @app.get("/api/vehicles/{vehicle_id}/mode06")
 def get_mode06(vehicle_id: str):
@@ -1324,9 +1393,10 @@ def add_repair(vehicle_id: str, r: RepairCreate):
 
 @app.get("/api/vehicles/{vehicle_id}/export")
 def export_vehicle(vehicle_id: str):
-    zip_path = backups_path() / f"backup_{vehicle_id}.zip"
+    safe_id = hashlib.sha256(vehicle_id.encode("utf-8")).hexdigest()[:20]
+    zip_path = backups_path() / f"backup_{safe_id}.zip"
     exporter.export_vehicle_zip(vehicle_id, str(zip_path))
-    return FileResponse(str(zip_path), filename=f"backup_vehiculo_{vehicle_id}.zip", media_type="application/zip")
+    return FileResponse(str(zip_path), filename=f"backup_vehiculo_{safe_id}.zip", media_type="application/zip")
 
 ai_service = AIService()
 
@@ -1425,10 +1495,10 @@ def _assistant_session_context(
 
 
 class CompareRequest(BaseModel):
-    session_id_a: str
-    session_id_b: str
-    label_a: Optional[str] = "Sesión A"
-    label_b: Optional[str] = "Sesión B"
+    session_id_a: str = Field(min_length=1, max_length=100)
+    session_id_b: str = Field(min_length=1, max_length=100)
+    label_a: Optional[str] = Field(default="Sesión A", max_length=100)
+    label_b: Optional[str] = Field(default="Sesión B", max_length=100)
 
 @app.get("/api/sessions/{session_id}/ai-explain")
 def explain_session(session_id: str):
@@ -1715,6 +1785,9 @@ def get_session_html_report(
 
 @app.websocket("/api/live")
 async def websocket_live_telemetry(websocket: WebSocket):
+    if not _is_allowed_browser_origin(websocket.headers.get("origin")):
+        await websocket.close(code=1008, reason="Origen no permitido")
+        return
     await websocket.accept()
     connected_websockets.append(websocket)
     try:

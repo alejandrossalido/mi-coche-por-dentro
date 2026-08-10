@@ -72,8 +72,8 @@ try {
     }
 
     Write-Host "Instalando dependencias de Python..."
-    & $Python -m pip install --upgrade pip
-    if ($LASTEXITCODE -ne 0) { throw "No se pudo actualizar pip." }
+    & $Python -m pip install --upgrade pip setuptools wheel
+    if ($LASTEXITCODE -ne 0) { throw "No se pudieron actualizar pip, setuptools y wheel." }
     & $Python -m pip install -r requirements.txt
     if ($LASTEXITCODE -ne 0) { throw "No se pudieron instalar las dependencias de Python." }
 

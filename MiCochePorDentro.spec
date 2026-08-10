@@ -21,10 +21,31 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=[
+        "PyInstaller",
+        "pytest",
+        "ruff",
+        "numpy.tests",
+        "pandas.tests",
+        "pyarrow.tests",
+        "scipy.tests",
+    ],
     noarchive=False,
     optimize=0,
 )
+# Algunos hooks de análisis incluyen fixtures de pruebas que no son necesarios
+# para ejecutar la aplicación y pueden confundirse con telemetría de usuario.
+_test_data_prefixes = (
+    "numpy/tests/",
+    "pandas/tests/",
+    "pyarrow/tests/",
+    "scipy/tests/",
+)
+a.datas = [
+    item
+    for item in a.datas
+    if not item[0].replace("\\", "/").startswith(_test_data_prefixes)
+]
 pyz = PYZ(a.pure)
 
 exe = EXE(

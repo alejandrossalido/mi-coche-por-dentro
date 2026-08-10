@@ -1,5 +1,7 @@
 # Mi Coche por Dentro
 
+[![CI](https://github.com/alejandrossalido/mi-coche-por-dentro/actions/workflows/ci.yml/badge.svg)](https://github.com/alejandrossalido/mi-coche-por-dentro/actions/workflows/ci.yml)
+
 Aplicación de escritorio para conectar un adaptador OBD-II, ver datos reales del coche, guardar trayectos, ejecutar pruebas guiadas y generar informes comprensibles.
 
 Es una aplicación de **solo lectura**: no codifica, no reprograma y no modifica la ECU.
@@ -33,6 +35,10 @@ La cantidad de información disponible depende del vehículo. RPM, velocidad o t
 - La aplicación no sustituye a un diagnóstico profesional.
 - Los vehículos y las sesiones se guardan localmente en el ordenador.
 - No es necesario introducir matrícula ni VIN completo.
+- El servidor acepta únicamente conexiones locales y rechaza páginas web externas.
+- Configurar una clave de IA no envía datos automáticamente: cada uso remoto requiere autorización explícita.
+
+Para comunicar una vulnerabilidad sin exponerla públicamente consulta la [política de seguridad](SECURITY.md).
 
 ## Información técnica
 

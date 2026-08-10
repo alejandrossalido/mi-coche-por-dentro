@@ -49,3 +49,14 @@ del programa. No elimine `%LOCALAPPDATA%\MiCochePorDentro`.
 
 El ejecutable no está firmado digitalmente. Windows SmartScreen puede mostrar
 una advertencia hasta que se use un certificado de firma de código válido.
+
+## Artefactos de publicación
+
+La compilación genera un ZIP versionado en `dist` y su archivo `.sha256`. El
+paquete incluye obligatoriamente `LICENSE`, `README.md` e `INSTALACION.md`;
+nunca debe publicarse una distribución sin esos avisos y sin verificar el hash.
+
+Antes de crear el ZIP, el proceso rechaza bases de datos, telemetría, archivos
+`.env` y registros, y arranca el ejecutable con un perfil temporal cuyo garaje
+debe estar vacío. `scripts/verify_public_release.ps1` permite repetir solo la
+comprobación de limpieza.

@@ -65,7 +65,7 @@ Esta alternativa hace lo mismo que `Instalar_MiCochePorDentro.bat`:
 
 ```powershell
 py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 
 Set-Location dashboard
